@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Zeratto - Redeem Kode</title>
+  <meta name="description" content="Redeem kode promo Zeratto.">
+  <link rel="icon" href="./assets/zeratto-coklat.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
+</head>
+<body>
+  <header class="zr-navbar">
+    <div class="zr-wrap zr-nav-inner">
+      <a class="zr-brand" href="./">
+        <img src="./assets/zeratto-coklat.png" alt="Zeratto">
+      </a>
+      <ul class="zr-nav-menu">
+        <li><a class="zr-nav-link" href="./">Home</a></li>
+        <li><a class="zr-nav-link" href="./produk.html">Produk</a></li>
+        <li><a class="zr-nav-link active" href="./redeemcode.html">Redeem Kode</a></li>
+        <li><a class="zr-nav-link" href="./tukarcoin.html">Tukar Saldo</a></li>
+        <li><a class="zr-nav-link" href="./profil.html">Profil</a></li>
+        <li><a class="zr-nav-link" href="./hubungikami.html">Tentang Kami</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main class="zr-wrap zr-main">
+    <section class="zr-section">
+      <div class="zr-page-hero">
+        <span class="zr-kicker">Promo Zeratto</span>
+        <h1>Redeem Kode</h1>
+        <p>Wajib login Google terlebih dulu. Satu akun bisa klaim beberapa kode selama kodenya masih valid.</p>
+      </div>
+    </section>
+
+    <section class="zr-section">
+      <div class="zr-card zr-auth-box">
+        <div class="zr-auth-row">
+          <div>
+            <h3>Akses Redeem</h3>
+            <p id="zrRedeemAuthHint">Silakan login dulu untuk membuka form redeem.</p>
+          </div>
+          <div class="zr-auth-actions">
+            <button id="zrLoginBtn" class="zr-login-btn" type="button">Login dengan Google</button>
+            <button id="zrLogoutBtn" class="zr-logout-btn" type="button" hidden>Logout</button>
+          </div>
+        </div>
+
+        <div id="zrRedeemAuthAlert" class="zr-alert info" hidden></div>
+
+        <div id="zrRedeemUserBox" class="zr-user-box" hidden>
+          <img id="zrRedeemUserPhoto" src="./assets/zeratto-coklat.png" alt="Foto profil">
+          <div class="zr-user-meta">
+            <strong id="zrRedeemUserName">-</strong>
+            <span id="zrRedeemUserEmail">-</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="zr-section">
+      <div class="zr-card zr-panel">
+        <h3>Masukkan Kode</h3>
+        <p>Kode yang valid akan dicatat ke akun login kamu. Setiap kode hanya bisa dipakai sekali.</p>
+        <form id="zrRedeemForm" class="zr-redeem">
+          <input id="zrRedeemCode" type="text" placeholder="Contoh: ZERATTOHEMAT" required>
+          <button id="zrRedeemSubmit" type="submit">Redeem</button>
+        </form>
+        <div id="zrRedeemMessage" class="zr-alert info" hidden></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="zr-footer">
+    <div class="zr-wrap">
+      <p>&copy; 2026 Zeratto. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="./zeratto-auth.js?v=20260407_1" defer></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      if (window.lucide && typeof window.lucide.createIcons === "function") {
+        window.lucide.createIcons({
+          attrs: {
+            "stroke-width": "2.1"
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

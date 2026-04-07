@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Admin Zeratto - Panel</title>
+  <meta name="description" content="Panel admin khusus Zeratto untuk kelola redeem code, saldo user, dan request penukaran.">
+  <link rel="icon" href="../../assets/zeratto-coklat.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../zeratto-admin.css?v=20260407_2">
+</head>
+<body class="za-body">
+  <div class="za-app" id="zaApp">
+    <header class="za-topbar">
+      <div class="za-topbar-left">
+        <img src="../../assets/zeratto-coklat.png" alt="Zeratto">
+        <div>
+          <strong>Panel Admin Zeratto</strong>
+          <span>Kelola redeem code, saldo user, dan request penukaran</span>
+        </div>
+      </div>
+      <div class="za-topbar-actions">
+        <button type="button" id="zaRefreshBtn">Refresh Data</button>
+        <button type="button" id="zaLogoutBtn" class="danger">Logout</button>
+      </div>
+    </header>
+
+    <main class="za-main">
+      <nav class="za-page-nav" id="zaPageNav">
+        <button type="button" class="za-page-nav-btn active" data-page-nav="dashboard">Dashboard</button>
+        <button type="button" class="za-page-nav-btn" data-page-nav="exchange">Request</button>
+        <button type="button" class="za-page-nav-btn" data-page-nav="users">User & Saldo</button>
+        <button type="button" class="za-page-nav-btn" data-page-nav="codes">Kode Redeem</button>
+        <button type="button" class="za-page-nav-btn" data-page-nav="redeems">Riwayat Redeem</button>
+      </nav>
+
+      <section class="za-page active" data-page="dashboard">
+        <section class="za-stats-grid">
+          <article class="za-stat-card">
+            <span>Total User</span>
+            <strong id="zaStatUsers">0</strong>
+          </article>
+          <article class="za-stat-card">
+            <span>Total Saldo User</span>
+            <strong id="zaStatPoints">0</strong>
+          </article>
+          <article class="za-stat-card">
+            <span>Kode Redeem</span>
+            <strong id="zaStatCodes">0</strong>
+            <small id="zaStatCodesMeta">Aktif 0 | Used 0</small>
+          </article>
+          <article class="za-stat-card">
+            <span>Request Penukaran</span>
+            <strong id="zaStatExchange">0</strong>
+            <small id="zaStatExchangeMeta">Pending 0 | Approved 0 | Rejected 0</small>
+          </article>
+        </section>
+      </section>
+
+      <section class="za-page" data-page="exchange">
+        <section class="za-card">
+          <div class="za-card-head">
+            <h2>Request Penukaran</h2>
+            <div class="za-controls">
+              <select id="zaExchangeFilter">
+                <option value="all">Semua Status</option>
+                <option value="pending" selected>Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <input id="zaExchangeSearch" type="search" placeholder="Cari nama/email/request ID">
+            </div>
+          </div>
+          <div id="zaExchangeList" class="za-list"></div>
+        </section>
+      </section>
+
+      <section class="za-page" data-page="users">
+        <section class="za-card">
+          <div class="za-card-head">
+            <h2>User & Saldo</h2>
+            <input id="zaUserSearch" type="search" placeholder="Cari nama/email/uid">
+          </div>
+          <div id="zaUsersList" class="za-list compact"></div>
+        </section>
+      </section>
+
+      <section class="za-page" data-page="codes">
+        <section class="za-card">
+          <div class="za-card-head">
+            <h2>Manajemen Kode Redeem</h2>
+            <div class="za-controls">
+              <select id="zaCodeFilter">
+                <option value="all">Semua</option>
+                <option value="active">Aktif</option>
+                <option value="used">Sudah Dipakai</option>
+                <option value="inactive">Nonaktif</option>
+              </select>
+              <input id="zaCodeSearch" type="search" placeholder="Cari kode">
+            </div>
+          </div>
+
+          <div class="za-import-box">
+            <label for="zaCodeTextarea">Import kode massal (1 baris = 1 kode)</label>
+            <textarea id="zaCodeTextarea" rows="5" placeholder="Contoh:&#10;ABC12345&#10;DEF67890"></textarea>
+            <div class="za-inline">
+              <label>
+                Nominal per kode (Rp)
+                <input id="zaCodePoint" type="number" min="10" step="10" value="10" readonly>
+              </label>
+              <label>
+                Target kode harian
+                <input id="zaDailyTarget" type="number" min="1" step="1" value="2000">
+              </label>
+              <button type="button" id="zaImportCodesBtn">Import Kode</button>
+              <button type="button" id="zaGenerate2000Btn">Generate Target Hari Ini</button>
+            </div>
+          </div>
+          <div id="zaCodesList" class="za-list compact"></div>
+        </section>
+
+        <section class="za-card">
+          <div class="za-card-head">
+            <h2>Rekapan Kode Voucher</h2>
+            <div class="za-controls">
+              <input id="zaRecapDate" type="date" title="Filter tanggal terbit kode">
+              <button type="button" id="zaRecapApplyBtn">Terapkan</button>
+              <button type="button" id="zaExportInBtn">Export Status In (Excel)</button>
+              <button type="button" id="zaExportFullBtn">Export In/Out (Excel)</button>
+              <button type="button" id="zaExportWeeklyBtn">Export Mingguan (Excel)</button>
+            </div>
+          </div>
+
+          <div class="za-recap-summary" id="zaRecapSummary">
+            <div class="za-recap-pill">Tanggal/Bulan/Tahun Terbit: <strong id="zaRecapDateLabel">-</strong></div>
+            <div class="za-recap-pill">Kode Redeem: <strong id="zaRecapTotalCodes">0</strong></div>
+            <div class="za-recap-pill">Status In: <strong id="zaRecapTotalIn">0</strong></div>
+            <div class="za-recap-pill">Status Out: <strong id="zaRecapTotalOut">0</strong></div>
+          </div>
+
+          <p class="za-recap-note" id="zaSundayReminder">
+            Reminder admin: kirim rekap ini ke admin setiap hari Minggu.
+          </p>
+
+          <div class="za-table-wrap">
+            <table class="za-table">
+              <thead>
+                <tr>
+                  <th>Kode Redeem</th>
+                  <th>Status In</th>
+                  <th>Status Out</th>
+                </tr>
+              </thead>
+              <tbody id="zaCodeRecapBody"></tbody>
+            </table>
+          </div>
+          <div class="za-empty" id="zaCodeRecapEmpty" hidden>Belum ada data kode untuk tanggal ini.</div>
+          <div class="za-empty" id="zaCodeRecapLimitHint" hidden></div>
+        </section>
+      </section>
+
+      <section class="za-page" data-page="redeems">
+        <section class="za-card">
+          <div class="za-card-head">
+            <h2>Riwayat Redeem User</h2>
+            <input id="zaRedeemSearch" type="search" placeholder="Cari kode/nama/email/uid">
+          </div>
+          <div id="zaRedeemHistory" class="za-list compact"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="za-toast" id="zaToast" hidden></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="../../zeratto-admin.js?v=20260407_2" defer></script>
+</body>
+</html>

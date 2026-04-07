@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Admin Zeratto - Login</title>
+  <meta name="description" content="Login admin khusus Zeratto.">
+  <link rel="icon" href="../assets/zeratto-coklat.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../zeratto-admin.css?v=20260407_2">
+</head>
+<body class="za-body">
+  <div class="za-login-wrap" id="zaLoginWrap">
+    <div class="za-login-card">
+      <div class="za-brand-row">
+        <img src="../assets/zeratto-coklat.png" alt="Zeratto">
+        <div>
+          <h1>Admin Zeratto</h1>
+          <p>Masuk untuk mengelola redeem dan penukaran.</p>
+        </div>
+      </div>
+      <form id="zaLoginForm" class="za-login-form">
+        <label>
+          Username
+          <input type="text" id="zaUsername" required autocomplete="username">
+        </label>
+        <label>
+          Password
+          <input type="password" id="zaPassword" required autocomplete="current-password">
+        </label>
+        <button type="submit" id="zaLoginBtn">Masuk</button>
+      </form>
+      <p class="za-login-error" id="zaLoginError" hidden>Login gagal. Cek username/password.</p>
+      <a class="za-back-link" href="../">Kembali ke Zeratto</a>
+    </div>
+  </div>
+
+  <div class="za-toast" id="zaToast" hidden></div>
+  <script src="../zeratto-admin.js?v=20260407_2" defer></script>
+</body>
+</html>

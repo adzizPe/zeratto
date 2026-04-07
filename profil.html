@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Zeratto - Profil</title>
+  <meta name="description" content="Profil brand Zeratto.">
+  <link rel="icon" href="./assets/zeratto-coklat.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
+</head>
+<body>
+  <header class="zr-navbar">
+    <div class="zr-wrap zr-nav-inner">
+      <a class="zr-brand" href="./">
+        <img src="./assets/zeratto-coklat.png" alt="Zeratto">
+      </a>
+      <ul class="zr-nav-menu">
+        <li><a class="zr-nav-link" href="./">Home</a></li>
+        <li><a class="zr-nav-link" href="./produk.html">Produk</a></li>
+        <li><a class="zr-nav-link" href="./redeemcode.html">Redeem Kode</a></li>
+        <li><a class="zr-nav-link" href="./tukarcoin.html">Tukar Saldo</a></li>
+        <li><a class="zr-nav-link active" href="./profil.html">Profil</a></li>
+        <li><a class="zr-nav-link" href="./hubungikami.html">Tentang Kami</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main class="zr-wrap zr-main">
+    <section class="zr-section">
+      <div class="zr-page-hero">
+        <span class="zr-kicker">Akun Pengguna</span>
+        <h1>Profil Zeratto</h1>
+        <p>Login Google dipakai agar akun kamu lebih aman saat mengakses fitur Zeratto.</p>
+      </div>
+    </section>
+
+    <section class="zr-section">
+      <div class="zr-card zr-auth-box">
+        <div class="zr-auth-row">
+          <div>
+            <h3>Status Login</h3>
+            <p id="zrProfileHint">Silakan login dulu dengan akun Google.</p>
+          </div>
+          <div class="zr-auth-actions">
+            <button id="zrLoginBtn" class="zr-login-btn" type="button">Login dengan Google</button>
+            <button id="zrLogoutBtn" class="zr-logout-btn" type="button" hidden>Logout</button>
+          </div>
+        </div>
+
+        <div id="zrProfileAlert" class="zr-alert info" hidden></div>
+
+        <div id="zrProfileBox" class="zr-user-box" hidden>
+          <img id="zrProfilePhoto" src="./assets/zeratto-coklat.png" alt="Foto profil">
+          <div class="zr-user-meta">
+            <strong id="zrProfileName">-</strong>
+            <span id="zrProfileEmail">-</span>
+          </div>
+        </div>
+
+        <div class="zr-point-summary" id="zrProfilePointSummary" hidden>
+          <div class="zr-point-item">
+            <span>Saldo Saat Ini</span>
+            <strong id="zrProfilePointValue">Rp 0</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="zr-section">
+      <div class="zr-card">
+        <p class="zr-text">
+          Zeratto lahir dari semangat menghadirkan produk camilan lokal yang mudah diterima semua kalangan.
+          Fokus kami adalah rasa stabil, kemasan menarik, dan pengalaman belanja yang sederhana.
+        </p>
+        <p class="zr-text">
+          Infrastruktur ini disiapkan untuk domain mandiri <strong>zeratto.my.id</strong>, termasuk katalog produk,
+          promo redeem, dan sistem saldo.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="zr-footer">
+    <div class="zr-wrap">
+      <p>&copy; 2026 Zeratto. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="./zeratto-auth.js?v=20260407_1" defer></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      if (window.lucide && typeof window.lucide.createIcons === "function") {
+        window.lucide.createIcons({
+          attrs: {
+            "stroke-width": "2.1"
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
