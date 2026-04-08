@@ -125,6 +125,77 @@ body.zr-site-shell::after {
   }
 }
 
+body.zr-site-shell {
+  background-image: linear-gradient(160deg, #fbf3e8 0%, #f1dfc6 52%, #ead0ae 100%);
+  background-size: 100% 100%;
+  background-position: 0 0;
+  animation: none;
+}
+
+body.zr-site-shell::before,
+body.zr-site-shell::after,
+.zr-site-shell .zr-page-hero::before,
+.zr-site-shell .zr-page-hero::after,
+.zr-site-shell .zr-hero-card::before,
+.zr-site-shell .zr-hero-card::after,
+.zr-shell-card::before,
+.zr-soft-card::after,
+.zr-site-shell .zr-card::after,
+.zr-site-shell .zr-product-card::after,
+.zr-site-shell .zr-feature-card::after,
+.zr-site-shell .zr-channel-card::after {
+  content: none;
+  display: none;
+}
+
+.zr-reveal,
+.zr-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.zr-site-shell .zr-nav-link:hover,
+.zr-site-shell .zr-nav-link.active,
+.zr-mini-panel:hover,
+.zr-step-card:hover,
+.zr-aside-card:hover,
+.zr-metric-card:hover,
+.zr-tip-card:hover,
+.zr-product-note:hover,
+.zr-site-shell .zr-card:hover,
+.zr-site-shell .zr-product-card:hover,
+.zr-site-shell .zr-channel-card:hover,
+.zr-site-shell .zr-option-card:hover {
+  transform: none;
+}
+
+.zr-page-products .zr-product-card {
+  overflow: hidden;
+  text-align: center;
+}
+
+.zr-page-products .zr-product-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin-bottom: 12px;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  aspect-ratio: auto;
+}
+
+.zr-page-products .zr-product-image img {
+  display: block;
+  width: min(100%, 220px);
+  max-width: 220px;
+  max-height: none;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
 .zr-site-shell .zr-wrap {
   width: min(1180px, 92%);
 }
@@ -615,10 +686,27 @@ body.zr-site-shell::after {
 }
 
 .zr-site-shell .zr-option-fields {
-  border-radius: 18px;
-  border: 1px solid rgba(128, 114, 223, 0.12);
-  background: linear-gradient(165deg, rgba(255, 253, 249, 0.98), rgba(243, 248, 255, 0.96));
-  padding: 14px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.zr-site-shell .zr-category-note {
+  margin: 0 0 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.zr-site-shell .zr-tukar-modal-card {
+  border: 1px solid rgba(210, 186, 153, 0.92);
+  background: #fffaf2;
+}
+
+.zr-site-shell .zr-tukar-modal-card::before {
+  content: none;
+  display: none;
 }
 
 .zr-site-shell .zr-option-grid {
