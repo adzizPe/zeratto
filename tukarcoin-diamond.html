@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Zeratto - Tukar Saldo Diamond Game</title>
-  <meta name="description" content="Tukar saldo Zeratto untuk Diamond Game.">
+  <meta name="description" content="Tukar saldo Zeratto untuk diamond game dengan tampilan baru yang lebih jelas dan lebih menarik.">
+  <meta name="google-adsense-account" content="ca-pub-2047280217150875">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2047280217150875" crossorigin="anonymous"></script>
   <link rel="icon" href="./assets/zeratto-coklat.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260409_3">
 </head>
-<body data-zr-tukar-option="diamond">
+<body class="zr-site-shell zr-page-tukar-category" data-zr-tukar-option="diamond">
   <header class="zr-navbar">
     <div class="zr-wrap zr-nav-inner">
       <a class="zr-brand" href="./">
@@ -30,55 +33,45 @@
 
   <main class="zr-wrap zr-main">
     <section class="zr-section">
-      <div class="zr-page-hero">
-        <span class="zr-kicker">Program Penukaran</span>
-        <h1>Tukar Saldo Zeratto</h1>
-        <p>Pilih kategori, isi form sesuai jenis hadiah, lalu admin proses manual dari dashboard.</p>
-      </div>
-    </section>
-
-    <section class="zr-section">
-      <div class="zr-card zr-auth-box">
-        <div class="zr-auth-row">
-          <div>
-            <h3>Status Akun Tukar Saldo</h3>
-            <p id="zrTukarAuthHint">Login Google dulu untuk buka form penukaran.</p>
+      <div class="zr-tukar-layout">
+        <div class="zr-card zr-auth-box zr-reveal">
+          <div class="zr-auth-row">
+            <div>
+              <h3>Status Akun Tukar Saldo</h3>
+              <p id="zrTukarAuthHint">Login Google dulu untuk buka form penukaran.</p>
+            </div>
+            <div class="zr-auth-actions">
+              <button id="zrLoginBtn" class="zr-login-btn" type="button">Login dengan Google</button>
+              <button id="zrLogoutBtn" class="zr-logout-btn" type="button" hidden>Logout</button>
+            </div>
           </div>
-          <div class="zr-auth-actions">
-            <button id="zrLoginBtn" class="zr-login-btn" type="button">Login dengan Google</button>
-            <button id="zrLogoutBtn" class="zr-logout-btn" type="button" hidden>Logout</button>
+
+          <div id="zrTukarAuthAlert" class="zr-alert info" hidden></div>
+
+          <div id="zrTukarUserBox" class="zr-user-box" hidden>
+            <img id="zrTukarUserPhoto" src="./assets/zeratto-coklat.png" alt="Foto profil">
+            <div class="zr-user-meta">
+              <strong id="zrTukarUserName">-</strong>
+              <span id="zrTukarUserEmail">-</span>
+            </div>
           </div>
-        </div>
 
-        <div id="zrTukarAuthAlert" class="zr-alert info" hidden></div>
-
-        <div id="zrTukarUserBox" class="zr-user-box" hidden>
-          <img id="zrTukarUserPhoto" src="./assets/zeratto-coklat.png" alt="Foto profil">
-          <div class="zr-user-meta">
-            <strong id="zrTukarUserName">-</strong>
-            <span id="zrTukarUserEmail">-</span>
-          </div>
-        </div>
-
-        <div class="zr-point-summary" id="zrPointSummary" hidden>
-          <div class="zr-point-item">
-            <span>Saldo Saat Ini</span>
-            <strong id="zrPointValue">Rp 0</strong>
+          <div class="zr-point-summary" id="zrPointSummary" hidden>
+            <div class="zr-point-item">
+              <span>Saldo Saat Ini</span>
+              <strong id="zrPointValue">Rp 0</strong>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <section class="zr-section">
-      <div class="zr-card zr-panel">
-        <h3>Pilih Opsi Penukaran</h3>
-        <p>Setiap kategori memiliki halaman form sendiri.</p>
-        <div class="zr-option-grid" id="zrTukarOptionGrid">
-          <a class="zr-option-card active" href="./tukarcoin-diamond.html" data-option="diamond"><span class="zr-option-icon"><i data-lucide="gem"></i></span><span>Diamond Game</span></a>
-          <a class="zr-option-card" href="./tukarcoin-pulsa.html" data-option="pulsa"><span class="zr-option-icon"><i data-lucide="smartphone"></i></span><span>Pulsa</span></a>
-          <a class="zr-option-card" href="./tukarcoin-ewallet.html" data-option="ewallet"><span class="zr-option-icon"><i data-lucide="wallet"></i></span><span>E-wallet</span></a>
-          <a class="zr-option-card" href="./tukarcoin-mainan.html" data-option="mainan"><span class="zr-option-icon"><i data-lucide="gamepad-2"></i></span><span>Mainan</span></a>
-          <a class="zr-option-card" href="./tukarcoin-lainnya.html" data-option="lainnya"><span class="zr-option-icon"><i data-lucide="gift"></i></span><span>Hadiah Lainnya</span></a>
+        <div class="zr-soft-card zr-reveal">
+          <span class="zr-kicker"><i data-lucide="gem"></i>Diamond Game</span>
+          <h3>Form Penukaran</h3>
+          <p>Kalau popup tadi ditutup, buka lagi dari tombol ini.</p>
+          <div class="zr-cta-row">
+            <button id="zrTukarOpenBtn" class="zr-btn primary" type="button">Buka Form</button>
+            <a class="zr-btn secondary" href="./tukarcoin.html">Kembali</a>
+          </div>
         </div>
       </div>
     </section>
@@ -149,7 +142,7 @@
     </section>
 
     <section class="zr-section">
-      <div class="zr-card zr-panel">
+      <div class="zr-card zr-panel zr-reveal">
         <h3>Riwayat Pengajuan Kamu</h3>
         <p>Daftar ini hanya untuk akun login aktif sekarang.</p>
         <div id="zrTukarHistory" class="zr-tukar-history"></div>
@@ -159,7 +152,9 @@
 
   <footer class="zr-footer">
     <div class="zr-wrap">
-      <p>&copy; 2026 Zeratto. All rights reserved.</p>
+      <div class="zr-footer-card">
+        <p>&copy; 2026 Zeratto. All rights reserved.</p>
+      </div>
     </div>
   </footer>
 
@@ -167,18 +162,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="./zeratto-auth.js?v=20260407_1" defer></script>
-  <script src="./zeratto-popup.js?v=20260407_1" defer></script>
+  <script src="./zeratto-popup.js?v=20260409_1" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script>
-    window.addEventListener("DOMContentLoaded", function () {
-      if (window.lucide && typeof window.lucide.createIcons === "function") {
-        window.lucide.createIcons({
-          attrs: {
-            "stroke-width": "2.1"
-          }
-        });
-      }
-    });
-  </script>
+  <script src="./zeratto-site.js?v=20260408_2" defer></script>
 </body>
 </html>

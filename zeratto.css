@@ -442,9 +442,7 @@ body::after {
 }
 
 .zr-ad-panel,
-.zr-ad-slot,
-ins.adsbygoogle,
-.adsbygoogle {
+.zr-ad-slot {
   display: none !important;
 }
 

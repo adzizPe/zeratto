@@ -7,6 +7,7 @@
   const modalBackdrop = document.getElementById("zrTukarModalBackdrop");
   const modalClose = document.getElementById("zrTukarModalClose");
   const optionGrid = document.getElementById("zrTukarOptionGrid");
+  const openTrigger = document.getElementById("zrTukarOpenBtn");
 
   function openModal() {
     modalShell.hidden = false;
@@ -37,6 +38,7 @@
   if (modalBackdrop) modalBackdrop.addEventListener("click", closeModal);
   if (modalClose) modalClose.addEventListener("click", closeModal);
   if (optionGrid) optionGrid.addEventListener("click", onOptionGridClick);
+  if (openTrigger) openTrigger.addEventListener("click", openModal);
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && !modalShell.hidden) {

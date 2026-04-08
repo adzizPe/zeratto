@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Zeratto - Redeem Kode</title>
   <meta name="description" content="Redeem kode promo Zeratto.">
+  <meta name="google-adsense-account" content="ca-pub-2047280217150875">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2047280217150875" crossorigin="anonymous"></script>
   <link rel="icon" href="./assets/zeratto-coklat.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260409_3">
 </head>
-<body>
+<body class="zr-site-shell">
   <header class="zr-navbar">
     <div class="zr-wrap zr-nav-inner">
       <a class="zr-brand" href="./">
@@ -77,7 +80,9 @@
 
   <footer class="zr-footer">
     <div class="zr-wrap">
-      <p>&copy; 2026 Zeratto. All rights reserved.</p>
+      <div class="zr-footer-card">
+        <p>&copy; 2026 Zeratto. All rights reserved.</p>
+      </div>
     </div>
   </footer>
 
@@ -86,16 +91,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="./zeratto-auth.js?v=20260407_1" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script>
-    window.addEventListener("DOMContentLoaded", function () {
-      if (window.lucide && typeof window.lucide.createIcons === "function") {
-        window.lucide.createIcons({
-          attrs: {
-            "stroke-width": "2.1"
-          }
-        });
-      }
-    });
-  </script>
+  <script src="./zeratto-site.js?v=20260408_2" defer></script>
 </body>
 </html>
