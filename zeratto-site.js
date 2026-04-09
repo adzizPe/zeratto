@@ -41,47 +41,32 @@
       link.innerHTML = createNavIcon(resolveNavIcon(link.getAttribute("href"))) + "<span>" + link.textContent.trim() + "</span>";
     });
 
-    function centerActiveLink() {
-      if (window.innerWidth > 860) return;
-
+    if (window.innerWidth <= 860) {
       const activeLink = navMenu.querySelector(".zr-nav-link.active");
-      if (!activeLink || typeof activeLink.scrollIntoView !== "function") return;
-
-      activeLink.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center"
-      });
+      if (activeLink && typeof activeLink.scrollIntoView === "function") {
+        window.requestAnimationFrame(function () {
+          activeLink.scrollIntoView({
+            behavior: "auto",
+            block: "nearest",
+            inline: "center"
+          });
+        });
+      }
     }
-
-    window.setTimeout(centerActiveLink, 80);
-    window.addEventListener("resize", centerActiveLink);
   }
 
   function initReveal() {
-    const items = Array.from(document.querySelectorAll(".zr-reveal"));
-    if (!items.length) return;
-
-    if (!("IntersectionObserver" in window)) {
-      items.forEach(function (item) {
-        item.classList.add("is-visible");
-      });
-      return;
-    }
-
-    const observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      });
-    }, {
-      threshold: 0.16,
-      rootMargin: "0px 0px -10% 0px"
+    document.querySelectorAll(".zr-reveal").forEach(function (item) {
+      item.classList.add("is-visible");
     });
+  }
 
-    items.forEach(function (item) {
-      observer.observe(item);
+  function tuneImages() {
+    document.querySelectorAll("img").forEach(function (img) {
+      if (!img.closest(".zr-navbar") && !img.hasAttribute("loading")) {
+        img.loading = "lazy";
+      }
+      img.decoding = "async";
     });
   }
 
@@ -97,6 +82,12 @@
   document.addEventListener("DOMContentLoaded", function () {
     ensureNavEnhancement();
     initReveal();
-    initIcons();
+    tuneImages();
+
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(initIcons, { timeout: 1200 });
+    } else {
+      window.setTimeout(initIcons, 32);
+    }
   });
 })();
