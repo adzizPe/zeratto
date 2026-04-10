@@ -1449,6 +1449,7 @@
       hideAlert("zrProfileAlert");
       showAlert("zrRedeemMessage", "info", "Kamu sudah logout. Login lagi untuk redeem.");
       showAlert("zrTukarMessage", "info", "Kamu sudah logout. Login lagi untuk tukar hadiah.");
+      window.dispatchEvent(new CustomEvent("userLoggedOut"));
       await applyUserState(null);
     } catch (err) {
       showAlert("zrProfileAlert", "error", "Logout gagal. Coba ulangi.");

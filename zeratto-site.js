@@ -212,6 +212,16 @@
       "</svg>";
   }
 
+  function createRobuxCardIcon() {
+    return '' +
+      '<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">' +
+        '<rect class="zr-robux-coin-back" x="16" y="10" width="32" height="44" rx="8" ry="8"></rect>' +
+        '<circle class="zr-robux-coin-dot" cx="32" cy="32" r="12"></circle>' +
+        '<path class="zr-robux-coin-top" d="M24 16 L32 10 L40 16 Z"></path>' +
+        '<path class="zr-robux-coin-bottom" d="M24 48 L32 54 L40 48 Z"></path>' +
+      "</svg>";
+  }
+
   function getDiamondCheckerConfig(gameName) {
     return DIAMOND_CHECKER_CONFIG[gameName] || DIAMOND_CHECKER_CONFIG["Mobile Legends"];
   }
@@ -279,6 +289,32 @@
 
     const parsed = Number(raw);
     return Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0;
+  }
+
+  function readStoredGoogleUser() {
+    let raw = "";
+    try {
+      raw = String(localStorage.getItem("googleUser") || "");
+    } catch (_err) {}
+    if (!raw) {
+      try {
+        raw = String(sessionStorage.getItem("googleUser") || "");
+      } catch (_err) {}
+    }
+    if (!raw) return null;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+      if (!parsed.id && !parsed.email) return null;
+      return parsed;
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  function isUserLoggedIn() {
+    return readStoredGoogleUser() !== null;
   }
 
   function getSystemTheme() {
@@ -828,12 +864,14 @@
     function renderPackageCards(gameName) {
       const packages = DIAMOND_PACKAGES[gameName] || DIAMOND_PACKAGES["Mobile Legends"];
       const currentPackage = String(packageField.value || "");
+      const isRoblox = gameName === "Roblox";
+      const iconSvg = isRoblox ? createRobuxCardIcon() : createDiamondCardIcon();
 
       packageGrid.innerHTML = packages.map(function (item) {
         const active = currentPackage === item.value ? " is-active" : "";
         return (
           '<button class="zr-diamond-package-card' + active + '" type="button" data-zr-diamond-package="' + item.value + '">' +
-            '<span class="zr-diamond-package-icon">' + createDiamondCardIcon() + "</span>" +
+            '<span class="zr-diamond-package-icon">' + iconSvg + "</span>" +
             '<strong>' + item.label + '</strong>' +
             '<small>' + formatCoinValue(item.coin) + '</small>' +
           "</button>"
@@ -1125,6 +1163,22 @@
     let remainingRewards = GACHA_REWARDS.slice();
     let spinning = false;
 
+    function updateLoginStatus() {
+      const isLoggedIn = isUserLoggedIn();
+      
+      if (!isLoggedIn) {
+        spinBtn.disabled = true;
+        if (resetBtn) resetBtn.disabled = true;
+        notice.textContent = "Login Google dulu untuk mulai bermain Gacha 9 Hadiah.";
+        return;
+      }
+      
+      // User is logged in, update button states normally
+      if (!spinning && remainingRewards.length > 0) {
+        spinBtn.disabled = false;
+      }
+    }
+
     function resetBoard() {
       remainingRewards = GACHA_REWARDS.slice();
       spinning = false;
@@ -1135,9 +1189,9 @@
         if (label) label.textContent = "Hadiah Misteri";
         tile.setAttribute("aria-label", "Kotak hadiah " + String(index + 1));
       });
-      spinBtn.disabled = false;
       if (resetBtn) resetBtn.disabled = false;
-      notice.textContent = "Tekan tombol spin untuk mulai mengacak hadiah.";
+      updateLoginStatus();
+      notice.textContent = isUserLoggedIn() ? "Tekan tombol spin untuk mulai mengacak hadiah." : "Login Google dulu untuk mulai bermain Gacha 9 Hadiah.";
     }
 
     function clearSpinState() {
@@ -1155,7 +1209,7 @@
       targetTile.setAttribute("aria-label", "Hadiah didapat: " + reward);
 
       spinning = false;
-      spinBtn.disabled = remainingRewards.length === 0;
+      spinBtn.disabled = remainingRewards.length === 0 || !isUserLoggedIn();
       if (resetBtn) resetBtn.disabled = false;
 
       if (!remainingRewards.length) {
@@ -1167,6 +1221,10 @@
 
     function spinBoard() {
       if (spinning) return;
+      if (!isUserLoggedIn()) {
+        notice.textContent = "Login Google dulu untuk mulai bermain Gacha 9 Hadiah.";
+        return;
+      }
 
       const availableTiles = tiles.filter(function (tile) {
         return !tile.classList.contains("is-opened");
@@ -1237,6 +1295,20 @@
     if (resetBtn) {
       resetBtn.addEventListener("click", resetBoard);
     }
+
+    // Listen for login/logout events
+    window.addEventListener("storage", function (event) {
+      if (!event || event.key !== "googleUser") return;
+      updateLoginStatus();
+    });
+
+    window.addEventListener("userLoggedIn", function () {
+      updateLoginStatus();
+    });
+
+    window.addEventListener("userLoggedOut", function () {
+      updateLoginStatus();
+    });
 
     resetBoard();
   }
