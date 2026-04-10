@@ -32,6 +32,8 @@
   const PATH_CODE_REPORTS = "zerattoCodeReports";
   const PAGE_NAMES = ["dashboard", "exchange", "users", "codes", "redeems"];
   const REDEEM_VALUE_RP = 10;
+  const EWALLET_MIN_COIN = 100;
+  const EWALLET_RUPIAH_PER_COIN = 10;
   const AUTO_GENERATE_CODE_TOTAL = 2000;
   const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -114,7 +116,71 @@
   }
 
   function formatRupiah(value) {
+    return toInt(value, 0).toLocaleString("id-ID") + " Coin";
+  }
+
+  function formatIdr(value) {
     return "Rp " + toInt(value, 0).toLocaleString("id-ID");
+  }
+
+  function calculateEwalletRupiah(points) {
+    return toInt(points, 0) * EWALLET_RUPIAH_PER_COIN;
+  }
+
+  function formatDetailLabel(key) {
+    const labels = {
+      walletType: "E-Wallet",
+      walletNumber: "Nomor E-Wallet",
+      walletName: "Atas Nama",
+      walletRupiah: "Saldo Masuk",
+      game: "Game",
+      package: "Paket",
+      packageCoin: "Butuh Coin",
+      nickname: "Nickname / Username",
+      userId: "ID Game",
+      serverId: "Server",
+      targetNumber: "Nomor Tujuan",
+      operator: "Operator",
+      nominal: "Nominal Pulsa",
+      customerName: "Nama Pelanggan",
+      toyName: "Nama Mainan",
+      shippingAddress: "Alamat Pengiriman",
+      title: "Nama Hadiah",
+      detail: "Rincian Hadiah"
+    };
+    return labels[key] || key;
+  }
+
+  function formatDetailValue(key, value) {
+    if (key === "walletRupiah") return formatIdr(value);
+    if (key === "packageCoin") return formatRupiah(value);
+    return String(value || "-");
+  }
+
+  function orderedDetailEntries(row) {
+    const detail = row && row.detail && typeof row.detail === "object" ? row.detail : {};
+    const orderMap = {
+      diamond: ["game", "package", "packageCoin", "nickname", "userId", "serverId"],
+      ewallet: ["walletType", "walletNumber", "walletName", "walletRupiah"],
+      pulsa: ["operator", "nominal", "packageCoin", "targetNumber", "customerName"],
+      mainan: ["toyName", "shippingAddress"],
+      lainnya: ["title", "detail", "shippingAddress"]
+    };
+    const orderedKeys = orderMap[row && row.option] || [];
+    const seen = {};
+    const entries = [];
+
+    orderedKeys.forEach(function (key) {
+      seen[key] = true;
+      entries.push([key, detail[key]]);
+    });
+
+    entriesSafe(detail).forEach(function (entry) {
+      if (seen[entry[0]]) return;
+      entries.push(entry);
+    });
+
+    return entries;
   }
 
   function escapeHtml(value) {
@@ -365,19 +431,27 @@
     return entriesSafe(state.exchangesMap).map(function (entry) {
       const requestId = entry[0];
       const row = entry[1] && typeof entry[1] === "object" ? entry[1] : {};
+      const option = String(row.option || "");
+      const pointUsed = toInt(row.pointUsed, 0);
+      const detail = row.detail && typeof row.detail === "object" ? Object.assign({}, row.detail) : {};
+      if (option === "ewallet" && toInt(detail.walletRupiah, 0) <= 0) {
+        detail.walletRupiah = calculateEwalletRupiah(pointUsed);
+      }
       return {
         requestId: requestId,
         uid: String(row.uid || ""),
         name: String(row.name || "-"),
         email: String(row.email || "-"),
+        option: option,
         optionLabel: String(row.optionLabel || row.option || "-"),
-        pointUsed: toInt(row.pointUsed, 0),
+        pointUsed: pointUsed,
         whatsapp: String(row.whatsapp || "-"),
         note: String(row.note || ""),
-        detail: row.detail && typeof row.detail === "object" ? row.detail : {},
+        detail: detail,
         status: String(row.status || "pending"),
         createdAt: parseTimestamp(row.createdAt),
-        updatedAt: parseTimestamp(row.updatedAt)
+        updatedAt: parseTimestamp(row.updatedAt),
+        pointBalanceAfter: toInt(row.pointBalanceAfter, 0)
       };
     }).sort(function (a, b) {
       return b.createdAt - a.createdAt;
@@ -458,8 +532,8 @@
     byId("zaStatExchangeMeta").textContent = "Pending " + pendingCount + " | Approved " + approvedCount + " | Rejected " + rejectedCount;
   }
 
-  function renderDetailObject(detail) {
-    const rows = entriesSafe(detail);
+  function renderDetailObject(row) {
+    const rows = orderedDetailEntries(row);
     if (!rows.length) {
       return "<div class=\"za-detail-row\"><span>Detail</span><span>-</span></div>";
     }
@@ -469,7 +543,7 @@
       if (val && typeof val === "object") {
         try { val = JSON.stringify(val); } catch (_err) { val = "[object]"; }
       }
-      return "<div class=\"za-detail-row\"><span>" + escapeHtml(key) + "</span><span>" + escapeHtml(String(val || "-")) + "</span></div>";
+      return "<div class=\"za-detail-row\"><span>" + escapeHtml(formatDetailLabel(key)) + "</span><span>" + escapeHtml(formatDetailValue(key, val)) + "</span></div>";
     }).join("");
   }
 
@@ -502,6 +576,7 @@
     }
 
     container.innerHTML = rows.map(function (row) {
+      const walletRupiah = row.option === "ewallet" ? toInt(row.detail.walletRupiah, 0) : 0;
       return [
         "<article class=\"za-item\">",
         "<div class=\"za-item-top\">",
@@ -512,10 +587,12 @@
         "<div class=\"za-meta\"><label>UID</label><span>", escapeHtml(row.uid || "-"), "</span></div>",
         "<div class=\"za-meta\"><label>WhatsApp</label><span>", escapeHtml(row.whatsapp), "</span></div>",
         "<div class=\"za-meta\"><label>Dibuat</label><span>", escapeHtml(formatDateTime(row.createdAt)), "</span></div>",
-        "<div class=\"za-meta\"><label>Nominal</label><span>", escapeHtml(formatRupiah(row.pointUsed)), "</span></div>",
+        "<div class=\"za-meta\"><label>Coin Dipakai</label><span>", escapeHtml(formatRupiah(row.pointUsed)), "</span></div>",
+        "<div class=\"za-meta\"><label>Sisa Coin</label><span>", escapeHtml(formatRupiah(row.pointBalanceAfter)), "</span></div>",
+        walletRupiah ? "<div class=\"za-meta\"><label>Saldo Masuk</label><span>" + escapeHtml(formatIdr(walletRupiah)) + "</span></div>" : "",
         "<div class=\"za-meta\"><label>Update</label><span>", escapeHtml(formatDateTime(row.updatedAt)), "</span></div>",
         "</div>",
-        "<div class=\"za-detail\">", renderDetailObject(row.detail), "</div>",
+        "<div class=\"za-detail\">", renderDetailObject(row), "</div>",
         row.note ? "<div class=\"za-detail\"><div class=\"za-detail-row\"><span>Catatan</span><span>" + escapeHtml(row.note) + "</span></div></div>" : "",
         "<div class=\"za-item-actions\">",
         "<button type=\"button\" data-exchange-action=\"pending\" data-request-id=\"", escapeHtml(row.requestId), "\" data-uid=\"", escapeHtml(row.uid), "\" class=\"", row.status === "pending" ? "active" : "", "\">Set Pending</button>",
@@ -549,18 +626,18 @@
         "<article class=\"za-item\">",
         "<div class=\"za-item-top\">",
         "<div class=\"za-item-title\"><strong>", escapeHtml(row.name), "</strong><span>", escapeHtml(row.email), "</span></div>",
-        "<div class=\"za-badge active\">Saldo ", escapeHtml(formatRupiah(row.points)), "</div>",
+        "<div class=\"za-badge active\">Coin ", escapeHtml(formatRupiah(row.points)), "</div>",
         "</div>",
         "<div class=\"za-item-grid\">",
         "<div class=\"za-meta\"><label>UID</label><span>", escapeHtml(row.uid), "</span></div>",
         "<div class=\"za-meta\"><label>Last Login</label><span>", escapeHtml(formatDateTime(row.lastLoginAt)), "</span></div>",
-        "<div class=\"za-meta\"><label>Saldo Saat Ini</label><span>", escapeHtml(formatRupiah(row.points)), "</span></div>",
+        "<div class=\"za-meta\"><label>Coin Saat Ini</label><span>", escapeHtml(formatRupiah(row.points)), "</span></div>",
         "</div>",
         "<div class=\"za-user-points\">",
-        "<input type=\"number\" min=\"0\" step=\"1\" value=\"100\" class=\"za-point-input\" title=\"Jumlah saldo (Rp)\">",
-        "<button type=\"button\" data-user-action=\"add\" data-uid=\"", escapeHtml(row.uid), "\">+ Saldo</button>",
-        "<button type=\"button\" data-user-action=\"sub\" data-uid=\"", escapeHtml(row.uid), "\" class=\"danger\">- Saldo</button>",
-        "<button type=\"button\" data-user-action=\"set\" data-uid=\"", escapeHtml(row.uid), "\" class=\"neutral\">Set Saldo</button>",
+        "<input type=\"number\" min=\"0\" step=\"1\" value=\"100\" class=\"za-point-input\" title=\"Jumlah coin\">",
+        "<button type=\"button\" data-user-action=\"add\" data-uid=\"", escapeHtml(row.uid), "\">+ Coin</button>",
+        "<button type=\"button\" data-user-action=\"sub\" data-uid=\"", escapeHtml(row.uid), "\" class=\"danger\">- Coin</button>",
+        "<button type=\"button\" data-user-action=\"set\" data-uid=\"", escapeHtml(row.uid), "\" class=\"neutral\">Set Coin</button>",
         "</div>",
         "</article>"
       ].join("");
@@ -885,7 +962,7 @@
         "<div class=\"za-meta\"><label>ID Redeem</label><span>", escapeHtml(row.redeemId), "</span></div>",
         "<div class=\"za-meta\"><label>UID</label><span>", escapeHtml(row.uid), "</span></div>",
         "<div class=\"za-meta\"><label>Waktu Redeem</label><span>", escapeHtml(formatDateTime(row.redeemedAt)), "</span></div>",
-        "<div class=\"za-meta\"><label>Saldo Setelah Redeem</label><span>", escapeHtml(formatRupiah(row.pointBalanceAfter)), "</span></div>",
+        "<div class=\"za-meta\"><label>Coin Setelah Redeem</label><span>", escapeHtml(formatRupiah(row.pointBalanceAfter)), "</span></div>",
         "</div>",
         "</article>"
       ].join("");
@@ -1073,7 +1150,7 @@
     renderStats();
     renderCodes();
     renderCodeRecap();
-    showToast("Berhasil generate " + generated.length + " kode baru (nominal fix Rp10/kode).", "success");
+    showToast("Berhasil generate " + generated.length + " kode baru (nominal fix 10 Coin/kode).", "success");
   }
 
   async function toggleCode(codeKeyValue) {
@@ -1337,7 +1414,7 @@
         const amount = toInt(input ? input.value : 0, 0);
         if (!uid || !action) return;
         if ((action === "add" || action === "sub") && amount <= 0) {
-          showToast("Masukkan jumlah saldo yang valid.", "error");
+          showToast("Masukkan jumlah coin yang valid.", "error");
           return;
         }
         btn.disabled = true;
@@ -1345,10 +1422,10 @@
           const nextPoints = await updateUserPoints(uid, action, amount);
           renderStats();
           renderUsers();
-          showToast("Saldo user diperbarui: " + formatRupiah(nextPoints), "success");
+          showToast("Coin user diperbarui: " + formatRupiah(nextPoints), "success");
         } catch (err) {
           console.error("[Zeratto Admin User Point Error]", err);
-          showToast("Gagal update saldo user.", "error");
+          showToast("Gagal update coin user.", "error");
         } finally {
           btn.disabled = false;
         }

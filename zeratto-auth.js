@@ -18,14 +18,20 @@
   const CODES_PATH = "zerattoRedeemCodes";
   const EXCHANGE_PATH = "zerattoExchangeRequests";
   const EXCHANGE_USER_PATH = "zerattoExchangeByUser";
+  const USER_POINTS_STORAGE_KEY = "zerattoUserPoints";
+  const USER_POINTS_EVENT = "zerattoPointsUpdated";
 
   const CODE_IMPORT_ALLOWLIST = ["anggasrg11@gmail.com"];
   const DEFAULT_REDEEM_RUPIAH = 10;
+  const EWALLET_MIN_COIN = 100;
+  const EWALLET_RUPIAH_PER_COIN = 10;
+  const EWALLET_TYPES = ["DANA", "GoPay", "OVO", "ShopeePay"];
+  const PULSA_OPERATORS = ["Telkomsel", "Axis", "XL", "Tri", "IM3", "Smartfren"];
 
   const TUKAR_LABELS = {
     diamond: "Diamond Game",
     pulsa: "Pulsa",
-    ewallet: "E-wallet",
+    ewallet: "Saldo E-Wallet",
     mainan: "Mainan",
     lainnya: "Hadiah Lainnya"
   };
@@ -52,7 +58,44 @@
   }
 
   function formatRupiah(value) {
+    return toInt(value, 0).toLocaleString("id-ID") + " Coin";
+  }
+
+  function formatIdr(value) {
     return "Rp " + toInt(value, 0).toLocaleString("id-ID");
+  }
+
+  function calculateEwalletRupiah(points) {
+    return toInt(points, 0) * EWALLET_RUPIAH_PER_COIN;
+  }
+
+  function readExchangeWalletRupiah(item) {
+    if (!item || String(item.option || "") !== "ewallet") return 0;
+    const detail = item.detail && typeof item.detail === "object" ? item.detail : {};
+    const storedValue = toInt(detail.walletRupiah, 0);
+    return storedValue > 0 ? storedValue : calculateEwalletRupiah(item.pointUsed);
+  }
+
+  function isKnownEwalletType(value) {
+    return EWALLET_TYPES.includes(String(value || "").trim());
+  }
+
+  function isKnownPulsaOperator(value) {
+    return PULSA_OPERATORS.includes(String(value || "").trim());
+  }
+
+  function getDiamondCheckerKey(gameName) {
+    if (gameName === "Mobile Legends") return "ml";
+    if (gameName === "Free Fire") return "freefire";
+    return "";
+  }
+
+  function gameRequiresDiamondId(gameName) {
+    return Boolean(getDiamondCheckerKey(gameName));
+  }
+
+  function gameRequiresDiamondServer(gameName) {
+    return gameName === "Mobile Legends";
   }
 
   function sanitizeFirebaseKey(value) {
@@ -147,6 +190,42 @@
       sessionStorage.setItem("googleUser", JSON.stringify(safe));
     } catch (_err) {}
     return safe;
+  }
+
+  function dispatchUserPoints(points) {
+    try {
+      window.dispatchEvent(new CustomEvent(USER_POINTS_EVENT, {
+        detail: {
+          points: toInt(points, 0)
+        }
+      }));
+    } catch (_err) {}
+  }
+
+  function storeCachedUserPoints(points) {
+    const safeValue = String(toInt(points, 0));
+
+    try {
+      localStorage.setItem(USER_POINTS_STORAGE_KEY, safeValue);
+    } catch (_err) {}
+
+    try {
+      sessionStorage.setItem(USER_POINTS_STORAGE_KEY, safeValue);
+    } catch (_err) {}
+
+    dispatchUserPoints(safeValue);
+  }
+
+  function clearCachedUserPoints() {
+    try {
+      localStorage.removeItem(USER_POINTS_STORAGE_KEY);
+    } catch (_err) {}
+
+    try {
+      sessionStorage.removeItem(USER_POINTS_STORAGE_KEY);
+    } catch (_err) {}
+
+    dispatchUserPoints(0);
   }
 
   function ensureGoogleIdentityScript() {
@@ -483,7 +562,7 @@
     const displayEmail = user.email || "Email tidak tersedia";
     const displayPhoto = user.photoURL || fallbackAvatar(displayName || displayEmail);
 
-    hint.textContent = "Login aktif. Akun ini dipakai untuk fitur redeem dan saldo.";
+    hint.textContent = "Login aktif. Akun ini dipakai untuk fitur redeem dan coin.";
     if (box) box.hidden = false;
     if (pointSummary) pointSummary.hidden = false;
     if (photo) photo.src = displayPhoto;
@@ -541,7 +620,7 @@
     if (!user) {
       hint.textContent = "Login Google dulu untuk buka form penukaran.";
       if (userBox) userBox.hidden = true;
-      showAlert("zrTukarAuthAlert", "info", "Akses tukar saldo dikunci sampai login Google berhasil.");
+      showAlert("zrTukarAuthAlert", "info", "Akses tukar hadiah dikunci sampai login Google berhasil.");
       return;
     }
 
@@ -628,6 +707,20 @@
 
     if (summary) summary.hidden = false;
     if (pointEl) pointEl.textContent = formatRupiah(points);
+
+    document.querySelectorAll("[data-zr-user-coin-box]").forEach((box) => {
+      box.hidden = false;
+    });
+
+    document.querySelectorAll("[data-zr-user-coin]").forEach((el) => {
+      el.textContent = formatRupiah(points);
+    });
+
+    document.querySelectorAll("[data-zr-user-coin-note]").forEach((el) => {
+      el.textContent = currentUser
+        ? "Pilih hadiah sesuai coin yang kamu punya."
+        : "Login dulu supaya coin akun kamu terbaca.";
+    });
   }
 
   function renderTukarHistory(items) {
@@ -644,6 +737,9 @@
       const status = String(item.status || "pending");
       const statusLabel = status === "approved" ? "Disetujui" : (status === "rejected" ? "Ditolak" : "Pending");
       const statusClass = status === "approved" ? "success" : (status === "rejected" ? "error" : "info");
+      const walletRupiah = readExchangeWalletRupiah(item);
+      const detail = item && item.detail && typeof item.detail === "object" ? item.detail : {};
+      const walletType = String(detail.walletType || "").trim();
       return "" +
         "<div class=\"zr-history-item\">" +
           "<div class=\"zr-history-top\">" +
@@ -651,7 +747,9 @@
             "<span class=\"zr-alert " + statusClass + "\">" + statusLabel + "</span>" +
           "</div>" +
           "<div class=\"zr-history-meta\">" +
-            "<span>Nominal: " + formatRupiah(item.pointUsed) + "</span>" +
+            (walletType ? "<span>Wallet: " + walletType + "</span>" : "") +
+            "<span>Coin Dipakai: " + formatRupiah(item.pointUsed) + "</span>" +
+            (walletRupiah ? "<span>Saldo Masuk: " + formatIdr(walletRupiah) + "</span>" : "") +
             "<span>Waktu: " + formatDate(item.createdAt) + "</span>" +
           "</div>" +
         "</div>";
@@ -720,13 +818,17 @@
 
       try {
         currentPoints = await loadUserPoints(currentUser.uid);
+        storeCachedUserPoints(currentPoints);
         updateProfilePointUI(currentPoints);
       } catch (err) {
+        currentPoints = 0;
+        storeCachedUserPoints(currentPoints);
         updateProfilePointUI(0);
         console.error("[Zeratto Profile Point Sync Error]", err);
       }
     } else {
       currentPoints = 0;
+      clearCachedUserPoints();
       const pointSummary = byId("zrProfilePointSummary");
       const pointEl = byId("zrProfilePointValue");
       if (pointSummary) pointSummary.hidden = true;
@@ -743,7 +845,7 @@
     try {
       await syncTukarState(currentUser);
     } catch (err) {
-      showAlert("zrTukarMessage", "error", "Gagal memuat status tukar saldo.");
+      showAlert("zrTukarMessage", "error", "Gagal memuat status tukar hadiah.");
       console.error("[Zeratto Tukar Sync Error]", err);
     }
   }
@@ -781,7 +883,7 @@
     showAlert(
       "zrRedeemMessage",
       "success",
-      "Total klaim akun ini: " + userRedeems.length + " kode. Klaim terakhir: " + code + " | Saldo: +" + formatRupiah(pointGain) + " | Waktu: " + redeemedAt
+      "Total klaim akun ini: " + userRedeems.length + " kode. Klaim terakhir: " + code + " | Coin: +" + formatRupiah(pointGain) + " | Waktu: " + redeemedAt
     );
   }
 
@@ -854,19 +956,21 @@
   }
 
   async function syncTukarState(user) {
-    if (!document.querySelector(".zr-tukar-form")) return;
+    if (!document.querySelector(".zr-tukar-form") && !byId("zrPointSummary") && !document.querySelector("[data-zr-user-coin]")) return;
 
     if (!user) {
       currentPoints = 0;
+      clearCachedUserPoints();
       updateTukarPointUI(0);
       setTukarFormEnabled(false);
-      showAlert("zrTukarMessage", "info", "Login Google dulu agar bisa menukar saldo.");
+      showAlert("zrTukarMessage", "info", "Login Google dulu agar bisa menukar hadiah.");
       renderTukarHistory([]);
       return;
     }
 
     try {
       currentPoints = await loadUserPoints(user.uid);
+      storeCachedUserPoints(currentPoints);
       updateTukarPointUI(currentPoints);
       setTukarFormEnabled(true);
       hideAlert("zrTukarMessage");
@@ -874,7 +978,7 @@
     } catch (err) {
       console.error("[Zeratto Sync Tukar Error]", err);
       setTukarFormEnabled(false);
-      showAlert("zrTukarMessage", "error", "Gagal memuat data saldo akun.");
+      showAlert("zrTukarMessage", "error", "Gagal memuat data coin akun.");
     }
   }
 
@@ -982,10 +1086,11 @@
         const pointsRef = db.ref(USERS_PATH + "/" + currentUser.uid + "/points");
         const pointsTx = await pointsRef.transaction((current) => toInt(current) + pointGain);
         if (!pointsTx.committed) {
-          throw new Error("Saldo tidak berhasil ditambahkan.");
+          throw new Error("Coin tidak berhasil ditambahkan.");
         }
 
         currentPoints = toInt(pointsTx.snapshot.val(), 0);
+        storeCachedUserPoints(currentPoints);
         await redeemRef.update({ pointBalanceAfter: currentPoints });
       } catch (pointsErr) {
         await redeemRef.remove().catch(() => {});
@@ -997,7 +1102,7 @@
       showAlert(
         "zrRedeemMessage",
         "success",
-        "Redeem berhasil. Saldo bertambah " + formatRupiah(pointGain) + "."
+        "Redeem berhasil. Coin bertambah " + formatRupiah(pointGain) + "."
       );
       updateTukarPointUI(currentPoints);
       await syncRedeemState(currentUser);
@@ -1016,13 +1121,17 @@
     return String(el.value || "");
   }
 
-  function collectTukarDetail(option, form) {
+  function collectTukarDetail(option, form, pointUsed) {
     if (option === "diamond") {
+      const game = readFormValue(form, "diamondGame").trim();
+      const verifiedName = form && form.dataset ? String(form.dataset.diamondVerifiedName || "").trim() : "";
       return {
-        game: readFormValue(form, "diamondGame").trim(),
+        game: game,
         package: readFormValue(form, "diamondPackage").trim(),
-        userId: readFormValue(form, "diamondUserId").trim(),
-        serverId: readFormValue(form, "diamondServerId").trim()
+        packageCoin: toInt(readFormValue(form, "diamondRequiredCoin"), 0),
+        nickname: verifiedName || readFormValue(form, "diamondNickname").trim(),
+        userId: gameRequiresDiamondId(game) ? readFormValue(form, "diamondUserId").trim() : "",
+        serverId: gameRequiresDiamondServer(game) ? readFormValue(form, "diamondServerId").trim() : ""
       };
     }
 
@@ -1030,7 +1139,9 @@
       return {
         targetNumber: readFormValue(form, "pulsaNumber").trim(),
         operator: readFormValue(form, "pulsaOperator").trim(),
-        nominal: readFormValue(form, "pulsaNominal").trim()
+        nominal: readFormValue(form, "pulsaNominal").trim(),
+        packageCoin: toInt(readFormValue(form, "pulsaPackageCoin"), 0),
+        customerName: readFormValue(form, "pulsaCustomerName").trim()
       };
     }
 
@@ -1038,7 +1149,8 @@
       return {
         walletType: readFormValue(form, "walletType").trim(),
         walletNumber: readFormValue(form, "walletNumber").trim(),
-        walletName: readFormValue(form, "walletName").trim()
+        walletName: readFormValue(form, "walletName").trim(),
+        walletRupiah: calculateEwalletRupiah(pointUsed)
       };
     }
 
@@ -1056,7 +1168,7 @@
     };
   }
 
-  function validateTukarDetail(option, detail) {
+  function validateTukarDetail(option, detail, pointUsed, form) {
     if (!detail || typeof detail !== "object") {
       return "Detail kategori hadiah tidak valid.";
     }
@@ -1064,21 +1176,58 @@
     if (option === "diamond") {
       if (!detail.game) return "Pilih game untuk kategori Diamond Game.";
       if (!detail.package) return "Paket diamond wajib diisi.";
-      if (!detail.userId) return "User ID game wajib diisi.";
+      if (toInt(detail.packageCoin, 0) <= 0) return "Coin untuk paket diamond belum terbaca.";
+      if (!detail.nickname) return "Nickname / username game wajib diisi.";
+      if (gameRequiresDiamondId(detail.game) && !detail.userId) return "ID game wajib diisi untuk " + detail.game + ".";
+      if (gameRequiresDiamondServer(detail.game) && !detail.serverId) return "Server wajib diisi untuk Mobile Legends.";
+      if (toInt(pointUsed, 0) !== toInt(detail.packageCoin, 0)) {
+        return detail.package + " membutuhkan " + toInt(detail.packageCoin, 0).toLocaleString("id-ID") + " coin.";
+      }
+
+      if (gameRequiresDiamondId(detail.game)) {
+        const checkPending = form && form.dataset ? String(form.dataset.diamondCheckPending || "0") === "1" : false;
+        const verified = form && form.dataset ? String(form.dataset.diamondVerified || "0") === "1" : false;
+        const verifiedGame = form && form.dataset ? String(form.dataset.diamondVerifiedGame || "").trim() : "";
+        const verifiedId = form && form.dataset ? String(form.dataset.diamondVerifiedId || "").trim() : "";
+        const verifiedServer = form && form.dataset ? String(form.dataset.diamondVerifiedServer || "").trim() : "";
+        const verifiedName = form && form.dataset ? String(form.dataset.diamondVerifiedName || "").trim() : "";
+
+        if (checkPending) {
+          return "Tunggu validasi akun game selesai.";
+        }
+
+        if (!verified || verifiedGame !== detail.game || verifiedId !== detail.userId || verifiedServer !== detail.serverId) {
+          return "Cek ID game dulu untuk memvalidasi akun " + detail.game + ".";
+        }
+
+        if (!verifiedName || detail.nickname !== verifiedName) {
+          return "Nickname akun belum sinkron. Cek ID game sekali lagi.";
+        }
+      }
+
       return "";
     }
 
     if (option === "pulsa") {
       if (!detail.targetNumber) return "Nomor tujuan pulsa wajib diisi.";
       if (!detail.operator) return "Operator pulsa wajib dipilih.";
+      if (!isKnownPulsaOperator(detail.operator)) return "Operator pulsa tidak valid.";
       if (!detail.nominal) return "Nominal pulsa wajib diisi.";
+      if (toInt(detail.packageCoin, 0) <= 0) return "Coin untuk nominal pulsa belum terbaca.";
+      if (toInt(pointUsed, 0) !== toInt(detail.packageCoin, 0)) {
+        return detail.operator + " " + detail.nominal + " membutuhkan " + toInt(detail.packageCoin, 0).toLocaleString("id-ID") + " coin.";
+      }
+      if (!detail.customerName) return "Nama pelanggan wajib diisi.";
       return "";
     }
 
     if (option === "ewallet") {
       if (!detail.walletType) return "Jenis e-wallet wajib dipilih.";
+      if (!isKnownEwalletType(detail.walletType)) return "Pilihan e-wallet tidak valid.";
       if (!detail.walletNumber) return "Nomor akun e-wallet wajib diisi.";
       if (!detail.walletName) return "Nama pemilik e-wallet wajib diisi.";
+      if (toInt(pointUsed, 0) < EWALLET_MIN_COIN) return "Minimal penukaran saldo e-wallet adalah " + EWALLET_MIN_COIN + " coin.";
+      if (toInt(detail.walletRupiah, 0) !== calculateEwalletRupiah(pointUsed)) return "Hasil konversi rupiah belum sinkron.";
       return "";
     }
 
@@ -1123,13 +1272,18 @@
       return;
     }
 
-    if (!whatsapp) {
+    if (option === "ewallet" && pointUsed < EWALLET_MIN_COIN) {
+      showAlert("zrTukarMessage", "error", "Minimal penukaran saldo e-wallet adalah " + EWALLET_MIN_COIN + " coin.");
+      return;
+    }
+
+    if (!whatsapp && option !== "diamond") {
       showAlert("zrTukarMessage", "error", "Nomor WhatsApp wajib diisi.");
       return;
     }
 
-    const optionDetail = collectTukarDetail(option, form);
-    const detailError = validateTukarDetail(option, optionDetail);
+    const optionDetail = collectTukarDetail(option, form, pointUsed);
+    const detailError = validateTukarDetail(option, optionDetail, pointUsed, form);
     if (detailError) {
       showAlert("zrTukarMessage", "error", detailError);
       return;
@@ -1144,7 +1298,7 @@
       });
 
       if (!pointsTx.committed) {
-        showAlert("zrTukarMessage", "error", "Saldo tidak cukup untuk penukaran ini.");
+        showAlert("zrTukarMessage", "error", "Coin tidak cukup untuk penukaran ini.");
         await syncTukarState(currentUser);
         return;
       }
@@ -1181,11 +1335,18 @@
       }
 
       currentPoints = newBalance;
+      storeCachedUserPoints(currentPoints);
       updateTukarPointUI(currentPoints);
       showAlert(
         "zrTukarMessage",
         "success",
-        "Pengajuan berhasil dikirim. Admin akan proses manual."
+        option === "ewallet"
+          ? "Pengajuan " + optionDetail.walletType + " berhasil dikirim. " + formatRupiah(pointUsed) + " akan diproses menjadi " + formatIdr(optionDetail.walletRupiah) + "."
+          : option === "diamond"
+            ? "Pengajuan " + optionDetail.package + " untuk " + optionDetail.nickname + " berhasil dikirim."
+            : option === "pulsa"
+              ? "Pengajuan pulsa " + optionDetail.operator + " " + optionDetail.nominal + " berhasil dikirim."
+            : "Pengajuan berhasil dikirim. Admin akan proses manual."
       );
 
       if (form) form.reset();
@@ -1193,7 +1354,7 @@
       await loadTukarHistory(currentUser.uid);
     } catch (err) {
       console.error("[Zeratto Tukar Submit Error]", err);
-      showAlert("zrTukarMessage", "error", "Gagal mengirim pengajuan penukaran. Coba lagi.");
+      showAlert("zrTukarMessage", "error", "Gagal mengirim pengajuan tukar hadiah. Coba lagi.");
       await syncTukarState(currentUser);
     }
   }
@@ -1287,7 +1448,7 @@
       }
       hideAlert("zrProfileAlert");
       showAlert("zrRedeemMessage", "info", "Kamu sudah logout. Login lagi untuk redeem.");
-      showAlert("zrTukarMessage", "info", "Kamu sudah logout. Login lagi untuk tukar saldo.");
+      showAlert("zrTukarMessage", "info", "Kamu sudah logout. Login lagi untuk tukar hadiah.");
       await applyUserState(null);
     } catch (err) {
       showAlert("zrProfileAlert", "error", "Logout gagal. Coba ulangi.");

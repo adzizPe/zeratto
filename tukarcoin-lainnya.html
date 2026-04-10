@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>Zeratto - Tukar Saldo Hadiah Lainnya</title>
-  <meta name="description" content="Tukar saldo Zeratto untuk hadiah lainnya dengan tampilan yang lebih jelas dan lebih menarik.">
+  <title>Zeratto - Tukar Hadiah Lainnya</title>
+  <meta name="description" content="Tukar hadiah Zeratto untuk hadiah lainnya dengan tampilan yang lebih jelas dan lebih menarik.">
   <meta name="google-adsense-account" content="ca-pub-2047280217150875">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2047280217150875" crossorigin="anonymous"></script>
   <link rel="icon" href="./assets/zeratto-coklat.png" type="image/png">
@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
-  <link rel="stylesheet" href="./zeratto-site.css?v=20260409_7">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260410_18">
 </head>
 <body class="zr-site-shell zr-page-tukar-category" data-zr-tukar-option="lainnya">
   <header class="zr-navbar">
@@ -22,9 +22,8 @@
       </a>
       <ul class="zr-nav-menu">
         <li><a class="zr-nav-link" href="./">Home</a></li>
-        <li><a class="zr-nav-link" href="./produk.html">Produk</a></li>
         <li><a class="zr-nav-link" href="./redeemcode.html">Redeem Kode</a></li>
-        <li><a class="zr-nav-link active" href="./tukarcoin.html">Tukar Saldo</a></li>
+        <li><a class="zr-nav-link active" href="./tukarcoin.html">Tukar Hadiah</a></li>
         <li><a class="zr-nav-link" href="./profil.html">Profil</a></li>
         <li><a class="zr-nav-link" href="./hubungikami.html">Tentang Kami</a></li>
       </ul>
@@ -37,7 +36,7 @@
         <div class="zr-card zr-auth-box zr-reveal">
           <div class="zr-auth-row">
             <div>
-              <h3>Status Akun Tukar Saldo</h3>
+              <h3>Status Akun Tukar Hadiah</h3>
               <p id="zrTukarAuthHint">Login Google dulu untuk buka form penukaran.</p>
             </div>
             <div class="zr-auth-actions">
@@ -58,8 +57,8 @@
 
           <div class="zr-point-summary" id="zrPointSummary" hidden>
             <div class="zr-point-item">
-              <span>Saldo Saat Ini</span>
-              <strong id="zrPointValue">Rp 0</strong>
+              <span>Coin Saat Ini</span>
+              <strong id="zrPointValue">0 Coin</strong>
             </div>
           </div>
         </div>
@@ -87,10 +86,18 @@
 
         <div id="zrTukarMessage" class="zr-alert info" hidden></div>
 
+        <div class="zr-inline-coin-card" data-zr-user-coin-box hidden>
+          <div class="zr-inline-coin-copy">
+            <span>Coin Kamu</span>
+            <small data-zr-user-coin-note>Login dulu supaya coin akun kamu terbaca.</small>
+          </div>
+          <strong data-zr-user-coin>0 Coin</strong>
+        </div>
+
         <form class="zr-tukar-form" data-option="lainnya">
           <div class="zr-form-grid">
             <label>
-              Nominal saldo yang ditukar
+              Nominal coin yang ditukar
               <input name="pointUsed" type="number" min="1" step="1" required placeholder="Contoh: 1000">
             </label>
             <label>
@@ -145,9 +152,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="./zeratto-auth.js?v=20260407_1" defer></script>
+  <script src="./zeratto-auth.js?v=20260410_14" defer></script>
   <script src="./zeratto-popup.js?v=20260409_1" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="./zeratto-site.js?v=20260409_1" defer></script>
+  <script src="./zeratto-site.js?v=20260410_19" defer></script>
 </body>
 </html>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>Zeratto - Tukar Saldo E-wallet</title>
-  <meta name="description" content="Tukar saldo Zeratto untuk e-wallet dengan halaman yang lebih rapi dan lebih menarik.">
+  <title>Zeratto - Tukar Hadiah Saldo E-Wallet</title>
+  <meta name="description" content="Tukar hadiah Zeratto untuk saldo e-wallet seperti DANA, GoPay, OVO, dan ShopeePay.">
   <meta name="google-adsense-account" content="ca-pub-2047280217150875">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2047280217150875" crossorigin="anonymous"></script>
   <link rel="icon" href="./assets/zeratto-coklat.png" type="image/png">
@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
-  <link rel="stylesheet" href="./zeratto-site.css?v=20260409_7">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260410_18">
 </head>
 <body class="zr-site-shell zr-page-tukar-category" data-zr-tukar-option="ewallet">
   <header class="zr-navbar">
@@ -22,9 +22,8 @@
       </a>
       <ul class="zr-nav-menu">
         <li><a class="zr-nav-link" href="./">Home</a></li>
-        <li><a class="zr-nav-link" href="./produk.html">Produk</a></li>
         <li><a class="zr-nav-link" href="./redeemcode.html">Redeem Kode</a></li>
-        <li><a class="zr-nav-link active" href="./tukarcoin.html">Tukar Saldo</a></li>
+        <li><a class="zr-nav-link active" href="./tukarcoin.html">Tukar Hadiah</a></li>
         <li><a class="zr-nav-link" href="./profil.html">Profil</a></li>
         <li><a class="zr-nav-link" href="./hubungikami.html">Tentang Kami</a></li>
       </ul>
@@ -37,7 +36,7 @@
         <div class="zr-card zr-auth-box zr-reveal">
           <div class="zr-auth-row">
             <div>
-              <h3>Status Akun Tukar Saldo</h3>
+              <h3>Status Akun Tukar Hadiah</h3>
               <p id="zrTukarAuthHint">Login Google dulu untuk buka form penukaran.</p>
             </div>
             <div class="zr-auth-actions">
@@ -58,16 +57,35 @@
 
           <div class="zr-point-summary" id="zrPointSummary" hidden>
             <div class="zr-point-item">
-              <span>Saldo Saat Ini</span>
-              <strong id="zrPointValue">Rp 0</strong>
+              <span>Coin Saat Ini</span>
+              <strong id="zrPointValue">0 Coin</strong>
             </div>
           </div>
         </div>
 
-        <div class="zr-soft-card zr-reveal">
-          <span class="zr-kicker"><i data-lucide="wallet"></i>E-wallet</span>
-          <h3>Form Penukaran</h3>
-          <p>Kalau popup tadi ditutup, buka lagi dari tombol ini.</p>
+        <div class="zr-soft-card zr-reveal zr-wallet-intro-card">
+          <span class="zr-kicker"><i data-lucide="wallet"></i>Saldo E-Wallet</span>
+          <h3>Konversi coin ke saldo e-wallet dibuat lebih langsung.</h3>
+          <p>Pilih dompet digital tujuan, isi data penerima, lalu masukkan coin. Sistem akan otomatis hitung nilai rupiah dengan minimal penukaran 100 coin.</p>
+          <div class="zr-ewallet-tab-row zr-ewallet-tab-row--intro">
+            <button class="zr-ewallet-tab is-active" type="button" data-target-field="walletType" data-value="DANA">
+              <span class="zr-ewallet-tab-logo zr-ewallet-tab-logo--dana"><img src="./assets/wallets/dana.svg" alt="DANA"></span>
+              <strong>DANA</strong>
+            </button>
+            <button class="zr-ewallet-tab" type="button" data-target-field="walletType" data-value="GoPay">
+              <span class="zr-ewallet-tab-logo zr-ewallet-tab-logo--gopay"><img src="./assets/wallets/gopay.svg" alt="GoPay"></span>
+              <strong>GoPay</strong>
+            </button>
+            <button class="zr-ewallet-tab" type="button" data-target-field="walletType" data-value="OVO">
+              <span class="zr-ewallet-tab-logo zr-ewallet-tab-logo--ovo"><span>OVO</span></span>
+              <strong>OVO</strong>
+            </button>
+            <button class="zr-ewallet-tab" type="button" data-target-field="walletType" data-value="ShopeePay">
+              <span class="zr-ewallet-tab-logo zr-ewallet-tab-logo--shopeepay"><img src="./assets/wallets/shopeepay.png" alt="ShopeePay"></span>
+              <strong>ShopeePay</strong>
+            </button>
+          </div>
+          <div class="zr-ewallet-rate-strip">Konversi: <strong>100 Coin = Rp 1.000</strong></div>
           <div class="zr-cta-row">
             <button id="zrTukarOpenBtn" class="zr-btn primary" type="button">Buka Form</button>
             <a class="zr-btn secondary" href="./tukarcoin.html">Kembali</a>
@@ -82,54 +100,93 @@
         <button type="button" class="zr-tukar-modal-close" id="zrTukarModalClose" aria-label="Tutup form penukaran">
           <i data-lucide="x"></i>
         </button>
-        <h3 id="zrTukarFormTitle">Form Penukaran: E-wallet</h3>
-        <p>Isi data akun e-wallet penerima secara akurat.</p>
+        <h3 id="zrTukarFormTitle">Form Penukaran: Saldo E-Wallet</h3>
+        <p>Pilih e-wallet tujuan, isi data akun, lalu masukkan coin. Nilai rupiah akan dihitung otomatis sesuai konversi.</p>
 
         <div id="zrTukarMessage" class="zr-alert info" hidden></div>
 
+        <div class="zr-inline-coin-card" data-zr-user-coin-box hidden>
+          <div class="zr-inline-coin-copy">
+            <span>Coin Kamu</span>
+            <small data-zr-user-coin-note>Login dulu supaya coin akun kamu terbaca.</small>
+          </div>
+          <strong data-zr-user-coin>0 Coin</strong>
+        </div>
+
         <form class="zr-tukar-form" data-option="ewallet">
-          <div class="zr-form-grid">
-            <label>
-              Nominal saldo yang ditukar
-              <input name="pointUsed" type="number" min="1" step="1" required placeholder="Contoh: 1000">
+          <div class="zr-option-fields zr-ewallet-fields">
+            <div class="zr-ewallet-tab-row">
+              <button class="zr-ewallet-tab is-active" type="button" data-target-field="walletType" data-value="DANA">
+                <span class="zr-ewallet-tab-logo zr-ewallet-tab-logo--dana"><img src="./assets/wallets/dana.svg" alt="DANA"></span>
+                <strong>DANA</strong>
+              </button>
+              <button class="zr-ewallet-tab" type="button" data-target-field="walletType" data-value="GoPay">
+                <span class="zr-ewallet-tab-logo zr-ewallet-tab-logo--gopay"><img src="./assets/wallets/gopay.svg" alt="GoPay"></span>
+                <strong>GoPay</strong>
+              </button>
+              <button class="zr-ewallet-tab" type="button" data-target-field="walletType" data-value="OVO">
+                <span class="zr-ewallet-tab-logo zr-ewallet-tab-logo--ovo"><span>OVO</span></span>
+                <strong>OVO</strong>
+              </button>
+              <button class="zr-ewallet-tab" type="button" data-target-field="walletType" data-value="ShopeePay">
+                <span class="zr-ewallet-tab-logo zr-ewallet-tab-logo--shopeepay"><img src="./assets/wallets/shopeepay.png" alt="ShopeePay"></span>
+                <strong>ShopeePay</strong>
+              </button>
+            </div>
+
+            <input name="walletType" type="hidden" value="DANA" required>
+
+            <div class="zr-ewallet-rate-strip">Konversi: <strong>100 Coin = Rp 1.000</strong></div>
+
+            <div id="zrEwalletSelectedCard" class="zr-ewallet-selected-card">
+              <span id="zrEwalletSelectedBadge" class="zr-ewallet-selected-badge">DANA dipilih</span>
+              <strong id="zrEwalletSelectedTitle">Kirim ke akun DANA</strong>
+              <small id="zrEwalletSelectedMeta">Saldo akan dikirim ke nomor DANA yang kamu isi di bawah.</small>
+            </div>
+
+            <label id="zrEwalletNumberField">
+              <span id="zrEwalletNumberLabel">Nomor DANA</span>
+              <input id="zrEwalletNumberInput" name="walletNumber" type="text" required placeholder="Masukkan nomor DANA">
             </label>
+
+            <label id="zrEwalletNameField">
+              <span id="zrEwalletNameLabel">Atas Nama DANA</span>
+              <input id="zrEwalletNameInput" name="walletName" type="text" required placeholder="Nama sesuai akun DANA">
+            </label>
+
             <label>
-              WhatsApp aktif
+              Nomor WhatsApp
               <input name="whatsapp" type="tel" required placeholder="08xxxxxxxxxx">
             </label>
-          </div>
 
-          <div class="zr-option-fields">
-            <p class="zr-category-note">Kategori E-wallet: isi jenis wallet, nomor akun, dan nama pemilik akun penerima.</p>
-            <div class="zr-form-grid">
-              <label>
-                Jenis e-wallet
-                <select name="walletType" required>
-                  <option value="">Pilih e-wallet</option>
-                  <option value="DANA">DANA</option>
-                  <option value="OVO">OVO</option>
-                  <option value="GoPay">GoPay</option>
-                  <option value="ShopeePay">ShopeePay</option>
-                  <option value="Lainnya">Lainnya</option>
-                </select>
-              </label>
-              <label>
-                Nomor akun e-wallet
-                <input name="walletNumber" type="text" required placeholder="Nomor e-wallet">
-              </label>
+            <div class="zr-ewallet-convert-card">
+              <strong id="zrEwalletConvertTitle" class="zr-ewallet-convert-title">Tukar ke DANA</strong>
+              <p id="zrEwalletConvertText" class="zr-ewallet-convert-text">Masukkan nilai coin dan hasil rupiah akan dikonversi otomatis untuk akun DANA. Minimal penukaran 100 coin.</p>
+              <div class="zr-ewallet-amount-grid">
+                <label class="zr-ewallet-amount-field">
+                  <span>Coin</span>
+                  <div class="zr-ewallet-prefixed">
+                    <span class="zr-ewallet-prefix">C</span>
+                    <input id="zrEwalletCoinInput" name="pointUsed" type="number" min="100" step="1" required placeholder="Minimal 100">
+                  </div>
+                </label>
+                <label class="zr-ewallet-amount-field">
+                  <span>Rupiah</span>
+                  <div class="zr-ewallet-prefixed zr-ewallet-prefixed--readonly">
+                    <span class="zr-ewallet-prefix">Rp</span>
+                    <input id="zrEwalletRupiahDisplay" type="text" value="0" readonly>
+                  </div>
+                </label>
+              </div>
+              <small id="zrEwalletConvertHint" class="zr-ewallet-convert-hint">Minimal penukaran 100 coin.</small>
+              <input name="walletRupiah" type="hidden" value="0">
             </div>
-            <label>
-              Nama pemilik akun e-wallet
-              <input name="walletName" type="text" required placeholder="Nama sesuai akun e-wallet">
-            </label>
           </div>
 
-          <label>
-            Catatan tambahan (opsional)
-            <textarea name="note" rows="3" placeholder="Tambahkan catatan untuk admin"></textarea>
-          </label>
-
-          <button type="submit">Kirim Pengajuan Penukaran</button>
+          <div class="zr-ewallet-action-row">
+            <button id="zrEwalletSubmitBtn" type="submit">Tukar ke DANA</button>
+            <button class="zr-btn secondary" type="reset">Reset</button>
+          </div>
         </form>
       </div>
     </section>
@@ -154,9 +211,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="./zeratto-auth.js?v=20260407_1" defer></script>
+  <script src="./zeratto-auth.js?v=20260410_14" defer></script>
   <script src="./zeratto-popup.js?v=20260409_1" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="./zeratto-site.js?v=20260409_1" defer></script>
+  <script src="./zeratto-site.js?v=20260410_19" defer></script>
 </body>
 </html>

@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
-  <link rel="stylesheet" href="./zeratto-site.css?v=20260409_7">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260410_17">
 </head>
 <body class="zr-site-shell">
   <header class="zr-navbar">
@@ -22,9 +22,8 @@
       </a>
       <ul class="zr-nav-menu">
         <li><a class="zr-nav-link active" href="./">Home</a></li>
-        <li><a class="zr-nav-link" href="./produk.html">Produk</a></li>
         <li><a class="zr-nav-link" href="./redeemcode.html">Redeem Kode</a></li>
-        <li><a class="zr-nav-link" href="./tukarcoin.html">Tukar Saldo</a></li>
+        <li><a class="zr-nav-link" href="./tukarcoin.html">Tukar Hadiah</a></li>
         <li><a class="zr-nav-link" href="./profil.html">Profil</a></li>
         <li><a class="zr-nav-link" href="./hubungikami.html">Tentang Kami</a></li>
       </ul>
@@ -33,13 +32,48 @@
 
   <main class="zr-wrap zr-main">
     <section class="zr-section">
-      <div class="zr-hero-card">
-        <span class="zr-kicker"><i data-lucide="sparkles"></i>Zeratto Home</span>
-        <h1>Zeratto Coklat</h1>
-        <p>Simple, manis, dan siap temani harimu.</p>
-        <div class="zr-cta-row">
-          <a href="./produk.html" class="zr-btn primary">Produk</a>
-          <a href="./redeemcode.html" class="zr-btn secondary">Redeem</a>
+      <div class="zr-hero-grid">
+        <div class="zr-hero-card">
+          <span class="zr-kicker"><i data-lucide="sparkles"></i>Welcome Zeratto</span>
+          <h1>Welcome to Zeratto.</h1>
+          <p>Rasa manis, tampilan rapi, dan pengalaman yang simpel dalam satu tempat.</p>
+          <div class="zr-pill-row">
+            <span class="zr-pill"><i data-lucide="candy"></i>Cokelat Zeratto</span>
+            <span class="zr-pill"><i data-lucide="package-2"></i>Snack Zeratto</span>
+          </div>
+        </div>
+
+        <div class="zr-soft-card zr-home-login-card">
+          <span class="zr-kicker"><i data-lucide="log-in"></i>Masuk Akun</span>
+          <h3>Login Google untuk redeem kode dan kumpulkan coin.</h3>
+          <p>Masuk lewat akun Google supaya redeem, coin, dan tukar hadiah kamu tercatat di akun yang sama.</p>
+          <div class="zr-cta-row">
+            <a href="./profil.html" class="zr-btn primary">Login Google</a>
+            <a href="./redeemcode.html" class="zr-btn secondary">Redeem Kode</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="zr-section">
+      <div class="zr-shell-card">
+        <span class="zr-kicker"><i data-lucide="shopping-bag"></i>Produk</span>
+        <div class="zr-product-grid zr-home-product-grid">
+          <article class="zr-product-card zr-reveal">
+            <div class="zr-product-image">
+              <img src="./assets/zeratto-coklat.png" alt="Cokelat Zeratto">
+            </div>
+            <h3 class="zr-product-name">Cokelat Zeratto</h3>
+            <p class="zr-text">Cokelat manis dengan tampilan simpel untuk jadi produk utama Zeratto.</p>
+          </article>
+
+          <article class="zr-product-card zr-reveal">
+            <div class="zr-product-image">
+              <img src="./assets/zeratto-coklat.png" alt="Snack Zeratto">
+            </div>
+            <h3 class="zr-product-name">Snack Zeratto</h3>
+            <p class="zr-text">Versi snack yang tetap ringan dilihat, cocok jadi pilihan pendamping di etalase utama.</p>
+          </article>
         </div>
       </div>
     </section>
@@ -54,6 +88,6 @@
   </footer>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="./zeratto-site.js?v=20260409_1" defer></script>
+  <script src="./zeratto-site.js?v=20260410_19" defer></script>
 </body>
 </html>

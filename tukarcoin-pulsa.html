@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>Zeratto - Tukar Saldo Pulsa</title>
-  <meta name="description" content="Tukar saldo Zeratto untuk pulsa dengan halaman yang lebih jelas dan lebih menarik.">
+  <title>Zeratto - Tukar Hadiah Pulsa</title>
+  <meta name="description" content="Tukar hadiah Zeratto untuk pulsa dengan halaman yang lebih jelas dan lebih menarik.">
   <meta name="google-adsense-account" content="ca-pub-2047280217150875">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2047280217150875" crossorigin="anonymous"></script>
   <link rel="icon" href="./assets/zeratto-coklat.png" type="image/png">
@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
-  <link rel="stylesheet" href="./zeratto-site.css?v=20260409_7">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260410_18">
 </head>
 <body class="zr-site-shell zr-page-tukar-category" data-zr-tukar-option="pulsa">
   <header class="zr-navbar">
@@ -22,9 +22,8 @@
       </a>
       <ul class="zr-nav-menu">
         <li><a class="zr-nav-link" href="./">Home</a></li>
-        <li><a class="zr-nav-link" href="./produk.html">Produk</a></li>
         <li><a class="zr-nav-link" href="./redeemcode.html">Redeem Kode</a></li>
-        <li><a class="zr-nav-link active" href="./tukarcoin.html">Tukar Saldo</a></li>
+        <li><a class="zr-nav-link active" href="./tukarcoin.html">Tukar Hadiah</a></li>
         <li><a class="zr-nav-link" href="./profil.html">Profil</a></li>
         <li><a class="zr-nav-link" href="./hubungikami.html">Tentang Kami</a></li>
       </ul>
@@ -37,7 +36,7 @@
         <div class="zr-card zr-auth-box zr-reveal">
           <div class="zr-auth-row">
             <div>
-              <h3>Status Akun Tukar Saldo</h3>
+              <h3>Status Akun Tukar Hadiah</h3>
               <p id="zrTukarAuthHint">Login Google dulu untuk buka form penukaran.</p>
             </div>
             <div class="zr-auth-actions">
@@ -58,8 +57,8 @@
 
           <div class="zr-point-summary" id="zrPointSummary" hidden>
             <div class="zr-point-item">
-              <span>Saldo Saat Ini</span>
-              <strong id="zrPointValue">Rp 0</strong>
+              <span>Coin Saat Ini</span>
+              <strong id="zrPointValue">0 Coin</strong>
             </div>
           </div>
         </div>
@@ -83,46 +82,72 @@
           <i data-lucide="x"></i>
         </button>
         <h3 id="zrTukarFormTitle">Form Penukaran: Pulsa</h3>
-        <p>Isi data nomor tujuan dan nominal pulsa dengan benar.</p>
+        <p>Pilih operator, pilih nominal, lalu isi data pelanggan dengan benar.</p>
 
         <div id="zrTukarMessage" class="zr-alert info" hidden></div>
 
-        <form class="zr-tukar-form" data-option="pulsa">
-          <div class="zr-form-grid">
-            <label>
-              Nominal saldo yang ditukar
-              <input name="pointUsed" type="number" min="1" step="1" required placeholder="Contoh: 1000">
-            </label>
-            <label>
-              WhatsApp aktif
-              <input name="whatsapp" type="tel" required placeholder="08xxxxxxxxxx">
-            </label>
+        <div class="zr-inline-coin-card" data-zr-user-coin-box hidden>
+          <div class="zr-inline-coin-copy">
+            <span>Coin Kamu</span>
+            <small data-zr-user-coin-note>Login dulu supaya coin akun kamu terbaca.</small>
           </div>
+          <strong data-zr-user-coin>0 Coin</strong>
+        </div>
 
-          <div class="zr-option-fields">
-            <p class="zr-category-note">Kategori Pulsa: isi nomor tujuan, operator, dan nominal pulsa yang diinginkan.</p>
-            <div class="zr-form-grid">
-              <label>
-                Nomor tujuan pulsa
+        <form class="zr-tukar-form" data-option="pulsa">
+          <div class="zr-option-fields zr-pulsa-fields">
+            <div class="zr-pulsa-operator-row">
+              <button class="zr-pulsa-operator is-active" type="button" data-zr-pulsa-operator="Telkomsel">Tsel</button>
+              <button class="zr-pulsa-operator" type="button" data-zr-pulsa-operator="Axis">Axis</button>
+              <button class="zr-pulsa-operator" type="button" data-zr-pulsa-operator="XL">XL</button>
+              <button class="zr-pulsa-operator" type="button" data-zr-pulsa-operator="Tri">3</button>
+              <button class="zr-pulsa-operator" type="button" data-zr-pulsa-operator="IM3">IM3</button>
+              <button class="zr-pulsa-operator" type="button" data-zr-pulsa-operator="Smartfren">Smartfren</button>
+            </div>
+
+            <input name="pulsaOperator" type="hidden" value="Telkomsel" required>
+            <input name="pulsaNominal" type="hidden" value="5.000" required>
+            <input name="pulsaPackageCoin" type="hidden" value="0">
+
+            <div id="zrPulsaNominalGrid" class="zr-pulsa-nominal-grid"></div>
+
+            <div class="zr-diamond-block zr-pulsa-summary-card">
+              <strong class="zr-diamond-block-title">Pilihan Pulsa</strong>
+              <div class="zr-diamond-summary-grid zr-pulsa-summary-grid">
+                <div class="zr-diamond-summary-item">
+                  <span>Operator</span>
+                  <strong id="zrPulsaSummaryOperator">Telkomsel</strong>
+                </div>
+                <div class="zr-diamond-summary-item">
+                  <span>Nominal</span>
+                  <strong id="zrPulsaSummaryNominal">5.000</strong>
+                </div>
+                <div class="zr-diamond-summary-item">
+                  <span>Butuh Coin</span>
+                  <strong id="zrPulsaSummaryCoin">-</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="zr-form-grid zr-pulsa-customer-grid">
+              <label class="zr-diamond-wide">
+                Nomor Pelanggan
                 <input name="pulsaNumber" type="tel" required placeholder="08xxxxxxxxxx">
               </label>
-              <label>
-                Operator
-                <select name="pulsaOperator" required>
-                  <option value="">Pilih operator</option>
-                  <option value="Telkomsel">Telkomsel</option>
-                  <option value="Indosat">Indosat</option>
-                  <option value="XL">XL</option>
-                  <option value="Tri">Tri</option>
-                  <option value="Smartfren">Smartfren</option>
-                  <option value="Lainnya">Lainnya</option>
-                </select>
+              <label class="zr-diamond-wide">
+                Nama Pelanggan
+                <input name="pulsaCustomerName" type="text" required placeholder="Masukkan nama pelanggan">
+              </label>
+              <label class="zr-diamond-wide">
+                Nomor WhatsApp
+                <input name="whatsapp" type="tel" required placeholder="08xxxxxxxxxx">
+              </label>
+              <label class="zr-diamond-wide">
+                Coin yang dibutuhkan
+                <input name="pointUsed" type="number" min="1" step="1" required placeholder="Akan terisi otomatis" readonly>
+                <small id="zrPulsaCoinHint" class="zr-diamond-field-hint">Coin akan otomatis mengikuti nominal pulsa yang dipilih.</small>
               </label>
             </div>
-            <label>
-              Nominal pulsa
-              <input name="pulsaNominal" type="text" required placeholder="Contoh: 25.000">
-            </label>
           </div>
 
           <label>
@@ -155,9 +180,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="./zeratto-auth.js?v=20260407_1" defer></script>
+  <script src="./zeratto-auth.js?v=20260410_14" defer></script>
   <script src="./zeratto-popup.js?v=20260409_1" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="./zeratto-site.js?v=20260409_1" defer></script>
+  <script src="./zeratto-site.js?v=20260410_19" defer></script>
 </body>
 </html>

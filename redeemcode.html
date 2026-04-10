@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
-  <link rel="stylesheet" href="./zeratto-site.css?v=20260409_7">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260410_17">
 </head>
 <body class="zr-site-shell">
   <header class="zr-navbar">
@@ -22,9 +22,8 @@
       </a>
       <ul class="zr-nav-menu">
         <li><a class="zr-nav-link" href="./">Home</a></li>
-        <li><a class="zr-nav-link" href="./produk.html">Produk</a></li>
         <li><a class="zr-nav-link active" href="./redeemcode.html">Redeem Kode</a></li>
-        <li><a class="zr-nav-link" href="./tukarcoin.html">Tukar Saldo</a></li>
+        <li><a class="zr-nav-link" href="./tukarcoin.html">Tukar Hadiah</a></li>
         <li><a class="zr-nav-link" href="./profil.html">Profil</a></li>
         <li><a class="zr-nav-link" href="./hubungikami.html">Tentang Kami</a></li>
       </ul>
@@ -33,47 +32,106 @@
 
   <main class="zr-wrap zr-main">
     <section class="zr-section">
-      <div class="zr-page-hero">
-        <span class="zr-kicker">Promo Zeratto</span>
+      <div class="zr-page-hero zr-page-hero-compact zr-page-hero-title-only">
         <h1>Redeem Kode</h1>
-        <p>Wajib login Google terlebih dulu. Satu akun bisa klaim beberapa kode selama kodenya masih valid.</p>
       </div>
     </section>
 
     <section class="zr-section">
-      <div class="zr-card zr-auth-box">
-        <div class="zr-auth-row">
+      <div class="zr-redeem-stack">
+        <div class="zr-card zr-auth-box zr-compact-card">
+          <div class="zr-auth-row">
+            <div>
+              <h3>Akses Redeem</h3>
+              <p id="zrRedeemAuthHint">Silakan login dulu untuk membuka form redeem.</p>
+            </div>
+            <div class="zr-auth-actions">
+              <button id="zrLoginBtn" class="zr-login-btn" type="button">Login dengan Google</button>
+              <button id="zrLogoutBtn" class="zr-logout-btn" type="button" hidden>Logout</button>
+            </div>
+          </div>
+
+          <div id="zrRedeemAuthAlert" class="zr-alert info" hidden></div>
+
+          <div id="zrRedeemUserBox" class="zr-user-box" hidden>
+            <img id="zrRedeemUserPhoto" src="./assets/zeratto-coklat.png" alt="Foto profil">
+            <div class="zr-user-meta">
+              <strong id="zrRedeemUserName">-</strong>
+              <span id="zrRedeemUserEmail">-</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="zr-card zr-panel zr-compact-card zr-redeem-box">
+          <h3>Masukkan Kode</h3>
+          <p>Kode yang valid akan masuk ke akun login kamu. Setiap kode hanya bisa dipakai sekali.</p>
+          <form id="zrRedeemForm" class="zr-redeem">
+            <input id="zrRedeemCode" type="text" placeholder="Contoh: ZERATTOHEMAT" required>
+            <button id="zrRedeemSubmit" type="submit">Redeem</button>
+          </form>
+          <div id="zrRedeemMessage" class="zr-alert info" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="zr-section">
+      <div class="zr-shell-card zr-gacha-card">
+        <div class="zr-gacha-head">
           <div>
-            <h3>Akses Redeem</h3>
-            <p id="zrRedeemAuthHint">Silakan login dulu untuk membuka form redeem.</p>
-          </div>
-          <div class="zr-auth-actions">
-            <button id="zrLoginBtn" class="zr-login-btn" type="button">Login dengan Google</button>
-            <button id="zrLogoutBtn" class="zr-logout-btn" type="button" hidden>Logout</button>
+            <span class="zr-kicker"><i data-lucide="gift"></i>Mini Game</span>
+            <h3>Gacha 9 Hadiah</h3>
+            <p>Sekarang bentuknya jadi satu papan 3 x 3 yang lebih kecil dan lebih interaktif, mirip sistem spin ringan.</p>
           </div>
         </div>
-
-        <div id="zrRedeemAuthAlert" class="zr-alert info" hidden></div>
-
-        <div id="zrRedeemUserBox" class="zr-user-box" hidden>
-          <img id="zrRedeemUserPhoto" src="./assets/zeratto-coklat.png" alt="Foto profil">
-          <div class="zr-user-meta">
-            <strong id="zrRedeemUserName">-</strong>
-            <span id="zrRedeemUserEmail">-</span>
+        <div class="zr-gacha-machine">
+          <div class="zr-gacha-board-wrap">
+            <div class="zr-gacha-grid zr-gacha-grid--compact" data-zr-gacha-grid>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="1">
+                <span class="zr-gacha-cell-no">01</span>
+                <strong>Hadiah Misteri</strong>
+              </button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="2">
+                <span class="zr-gacha-cell-no">02</span>
+                <strong>Hadiah Misteri</strong>
+              </button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="3">
+                <span class="zr-gacha-cell-no">03</span>
+                <strong>Hadiah Misteri</strong>
+              </button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="4">
+                <span class="zr-gacha-cell-no">04</span>
+                <strong>Hadiah Misteri</strong>
+              </button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="5">
+                <span class="zr-gacha-cell-no">05</span>
+                <strong>Hadiah Misteri</strong>
+              </button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="6">
+                <span class="zr-gacha-cell-no">06</span>
+                <strong>Hadiah Misteri</strong>
+              </button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="7">
+                <span class="zr-gacha-cell-no">07</span>
+                <strong>Hadiah Misteri</strong>
+              </button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="8">
+                <span class="zr-gacha-cell-no">08</span>
+                <strong>Hadiah Misteri</strong>
+              </button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="9">
+                <span class="zr-gacha-cell-no">09</span>
+                <strong>Hadiah Misteri</strong>
+              </button>
+            </div>
+          </div>
+          <div class="zr-gacha-control-panel">
+            <div id="zrGachaNotice" class="zr-gacha-notice" aria-live="polite">Tekan tombol spin untuk mulai mengacak hadiah.</div>
+            <div class="zr-gacha-actions">
+              <button id="zrGachaSpinBtn" class="zr-btn primary" type="button">Mulai Spin</button>
+              <button id="zrGachaResetBtn" class="zr-btn secondary" type="button">Acak Ulang</button>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <section class="zr-section">
-      <div class="zr-card zr-panel">
-        <h3>Masukkan Kode</h3>
-        <p>Kode yang valid akan dicatat ke akun login kamu. Setiap kode hanya bisa dipakai sekali.</p>
-        <form id="zrRedeemForm" class="zr-redeem">
-          <input id="zrRedeemCode" type="text" placeholder="Contoh: ZERATTOHEMAT" required>
-          <button id="zrRedeemSubmit" type="submit">Redeem</button>
-        </form>
-        <div id="zrRedeemMessage" class="zr-alert info" hidden></div>
       </div>
     </section>
   </main>
@@ -89,8 +147,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="./zeratto-auth.js?v=20260407_1" defer></script>
+  <script src="./zeratto-auth.js?v=20260410_13" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="./zeratto-site.js?v=20260409_1" defer></script>
+  <script src="./zeratto-site.js?v=20260410_19" defer></script>
 </body>
 </html>

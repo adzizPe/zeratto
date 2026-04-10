@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>Zeratto - Tukar Saldo Diamond Game</title>
-  <meta name="description" content="Tukar saldo Zeratto untuk diamond game dengan tampilan baru yang lebih jelas dan lebih menarik.">
+  <title>Zeratto - Tukar Hadiah Diamond Game</title>
+  <meta name="description" content="Tukar hadiah Zeratto untuk diamond game dengan pilihan game dan paket yang lebih tertata.">
   <meta name="google-adsense-account" content="ca-pub-2047280217150875">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2047280217150875" crossorigin="anonymous"></script>
   <link rel="icon" href="./assets/zeratto-coklat.png" type="image/png">
@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
-  <link rel="stylesheet" href="./zeratto-site.css?v=20260409_7">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260410_18">
 </head>
 <body class="zr-site-shell zr-page-tukar-category" data-zr-tukar-option="diamond">
   <header class="zr-navbar">
@@ -22,9 +22,8 @@
       </a>
       <ul class="zr-nav-menu">
         <li><a class="zr-nav-link" href="./">Home</a></li>
-        <li><a class="zr-nav-link" href="./produk.html">Produk</a></li>
         <li><a class="zr-nav-link" href="./redeemcode.html">Redeem Kode</a></li>
-        <li><a class="zr-nav-link active" href="./tukarcoin.html">Tukar Saldo</a></li>
+        <li><a class="zr-nav-link active" href="./tukarcoin.html">Tukar Hadiah</a></li>
         <li><a class="zr-nav-link" href="./profil.html">Profil</a></li>
         <li><a class="zr-nav-link" href="./hubungikami.html">Tentang Kami</a></li>
       </ul>
@@ -37,7 +36,7 @@
         <div class="zr-card zr-auth-box zr-reveal">
           <div class="zr-auth-row">
             <div>
-              <h3>Status Akun Tukar Saldo</h3>
+              <h3>Status Akun Tukar Hadiah</h3>
               <p id="zrTukarAuthHint">Login Google dulu untuk buka form penukaran.</p>
             </div>
             <div class="zr-auth-actions">
@@ -58,16 +57,16 @@
 
           <div class="zr-point-summary" id="zrPointSummary" hidden>
             <div class="zr-point-item">
-              <span>Saldo Saat Ini</span>
-              <strong id="zrPointValue">Rp 0</strong>
+              <span>Coin Saat Ini</span>
+              <strong id="zrPointValue">0 Coin</strong>
             </div>
           </div>
         </div>
 
-        <div class="zr-soft-card zr-reveal">
+        <div class="zr-soft-card zr-reveal zr-diamond-intro-card">
           <span class="zr-kicker"><i data-lucide="gem"></i>Diamond Game</span>
-          <h3>Form Penukaran</h3>
-          <p>Kalau popup tadi ditutup, buka lagi dari tombol ini.</p>
+          <h3>Pilih game, pilih paket, lalu isi data akun seperti di sketsa.</h3>
+          <p>Halaman ini saya bikin lebih visual: ada tab game di atas, daftar paket kotak-kotak yang enak dipilih, lalu form akun game di bagian bawah.</p>
           <div class="zr-cta-row">
             <button id="zrTukarOpenBtn" class="zr-btn primary" type="button">Buka Form</button>
             <a class="zr-btn secondary" href="./tukarcoin.html">Kembali</a>
@@ -78,57 +77,107 @@
 
     <section class="zr-section zr-tukar-modal-shell" id="zrTukarModalShell" hidden>
       <div class="zr-tukar-modal-backdrop" id="zrTukarModalBackdrop"></div>
-      <div class="zr-card zr-panel zr-tukar-modal-card" role="dialog" aria-modal="true" aria-labelledby="zrTukarFormTitle">
+      <div class="zr-card zr-panel zr-tukar-modal-card" role="dialog" aria-modal="true" aria-label="Diamond Game">
         <button type="button" class="zr-tukar-modal-close" id="zrTukarModalClose" aria-label="Tutup form penukaran">
           <i data-lucide="x"></i>
         </button>
-        <h3 id="zrTukarFormTitle">Form Penukaran: Diamond Game</h3>
-        <p>Isi game, paket diamond, dan data akun game dengan benar.</p>
 
         <div id="zrTukarMessage" class="zr-alert info" hidden></div>
 
+        <div class="zr-inline-coin-card" data-zr-user-coin-box hidden>
+          <div class="zr-inline-coin-copy">
+            <span>Coin Kamu</span>
+            <small data-zr-user-coin-note>Login dulu supaya coin akun kamu terbaca.</small>
+          </div>
+          <strong data-zr-user-coin>0 Coin</strong>
+        </div>
+
         <form class="zr-tukar-form" data-option="diamond">
-          <div class="zr-form-grid">
-            <label>
-              Nominal saldo yang ditukar
-              <input name="pointUsed" type="number" min="1" step="1" required placeholder="Contoh: 1000">
-            </label>
-            <label>
-              WhatsApp aktif
-              <input name="whatsapp" type="tel" required placeholder="08xxxxxxxxxx">
-            </label>
+          <div class="zr-option-fields zr-diamond-fields">
+            <div class="zr-diamond-sketch-shell">
+              <div class="zr-diamond-tab-row">
+                <button class="zr-diamond-tab is-active" type="button" data-zr-diamond-game="Mobile Legends">
+                  <span class="zr-diamond-tab-thumb"><img src="./assets/games/mobile-legends.webp" alt="Mobile Legends"></span>
+                  <strong>Mobile Legends</strong>
+                </button>
+                <button class="zr-diamond-tab" type="button" data-zr-diamond-game="Free Fire">
+                  <span class="zr-diamond-tab-thumb"><img src="./assets/games/free-fire.png" alt="Free Fire"></span>
+                  <strong>Free Fire</strong>
+                </button>
+                <button class="zr-diamond-tab" type="button" data-zr-diamond-game="Roblox">
+                  <span class="zr-diamond-tab-thumb"><img src="./assets/games/roblox.svg" alt="Roblox"></span>
+                  <strong>Roblox</strong>
+                </button>
+              </div>
+
+              <div class="zr-diamond-board">
+                <div class="zr-diamond-board-top">
+                  <div>
+                    <span class="zr-diamond-board-label">Paket Tersedia</span>
+                    <h4 id="zrDiamondBoardTitle">Mobile Legends</h4>
+                  </div>
+                  <div class="zr-diamond-board-picked">
+                    <span>Dipilih</span>
+                    <strong id="zrDiamondPickedPackage">Belum pilih paket</strong>
+                  </div>
+                </div>
+                <div class="zr-diamond-package-grid" id="zrDiamondPackageGrid"></div>
+              </div>
+
+              <input name="diamondGame" type="hidden" value="Mobile Legends" required>
+              <input name="diamondPackage" type="hidden" value="" required>
+              <input name="diamondRequiredCoin" type="hidden" value="0">
+            </div>
+
+            <div class="zr-diamond-block zr-diamond-form-card">
+              <strong class="zr-diamond-block-title">Data Akun Game</strong>
+              <div class="zr-form-grid zr-diamond-account-grid">
+                <label class="zr-diamond-wide" id="zrDiamondNicknameField" hidden>
+                  <span id="zrDiamondNicknameLabel">Nickname / Username Game</span>
+                  <input name="diamondNickname" type="text" required placeholder="Masukkan username game">
+                  <small id="zrDiamondNicknameHint" class="zr-diamond-field-hint">Isi username game secara manual.</small>
+                </label>
+                <label id="zrDiamondUserIdField">
+                  <span id="zrDiamondUserIdLabel">ID Game</span>
+                  <input name="diamondUserId" type="text" required placeholder="Masukkan ID game">
+                </label>
+                <label id="zrDiamondServerField">
+                  <span id="zrDiamondServerLabel">Server</span>
+                  <input name="diamondServerId" type="text" placeholder="Isi server jika diperlukan">
+                </label>
+                <div id="zrDiamondInlineStatus" class="zr-diamond-inline-status zr-diamond-wide" hidden>
+                  <span id="zrDiamondInlineLabel">Nickname</span>
+                  <strong id="zrDiamondInlineValue">-</strong>
+                  <small id="zrDiamondInlineMeta"></small>
+                </div>
+              </div>
+            </div>
+
+            <div class="zr-diamond-block zr-diamond-note-card">
+              <strong class="zr-diamond-block-title">Catatan Pilihan</strong>
+              <div class="zr-diamond-summary-grid">
+                <div class="zr-diamond-summary-item">
+                  <span>Paket</span>
+                  <strong id="zrDiamondSummaryPackage">Belum pilih paket</strong>
+                </div>
+                <div class="zr-diamond-summary-item">
+                  <span>Butuh Coin</span>
+                  <strong id="zrDiamondSummaryCoin">-</strong>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="zr-option-fields">
-            <p class="zr-category-note">Kategori Diamond Game: pilih game, isi paket diamond, User ID, dan Server ID jika game memerlukannya.</p>
-            <div class="zr-form-grid">
-              <label>
-                Pilih game
-                <select name="diamondGame" required>
-                  <option value="">Pilih game</option>
-                  <option value="Mobile Legends">Mobile Legends</option>
-                  <option value="Free Fire">Free Fire</option>
-                  <option value="PUBG Mobile">PUBG Mobile</option>
-                  <option value="Honor of Kings">Honor of Kings</option>
-                  <option value="Roblox">Roblox</option>
-                  <option value="Lainnya">Lainnya</option>
-                </select>
-              </label>
-              <label>
-                Paket diamond
-                <input name="diamondPackage" type="text" required placeholder="Contoh: 86 Diamond">
-              </label>
-            </div>
-            <div class="zr-form-grid">
-              <label>
-                User ID game
-                <input name="diamondUserId" type="text" required placeholder="Masukkan User ID">
-              </label>
-              <label>
-                Server ID game (opsional)
-                <input name="diamondServerId" type="text" placeholder="Isi jika diperlukan game">
-              </label>
-            </div>
+          <div class="zr-form-grid zr-diamond-account-grid">
+            <label class="zr-diamond-wide">
+              Coin yang dibutuhkan
+              <input name="pointUsed" type="number" min="1" step="1" required placeholder="Akan terisi otomatis" readonly>
+              <small id="zrDiamondCoinHint" class="zr-diamond-field-hint">Coin akan otomatis mengikuti paket yang dipilih.</small>
+            </label>
+            <label class="zr-diamond-wide">
+              WhatsApp (opsional)
+              <input name="whatsapp" type="tel" placeholder="08xxxxxxxxxx">
+            </label>
           </div>
 
           <label>
@@ -161,9 +210,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="./zeratto-auth.js?v=20260407_1" defer></script>
+  <script src="./zeratto-auth.js?v=20260410_14" defer></script>
   <script src="./zeratto-popup.js?v=20260409_1" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="./zeratto-site.js?v=20260409_1" defer></script>
+  <script src="./zeratto-site.js?v=20260410_19" defer></script>
 </body>
 </html>
