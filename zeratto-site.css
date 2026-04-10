@@ -3,8 +3,8 @@ html {
 }
 
 body.zr-site-shell {
-  --site-ink: #2d1b10;
-  --site-ink-soft: #7a5640;
+  --site-ink: #111111;
+  --site-ink-soft: #111111;
   --site-line: rgba(124, 76, 41, 0.14);
   --site-line-strong: rgba(124, 76, 41, 0.24);
   --site-card: rgba(255, 251, 246, 0.95);
@@ -686,7 +686,7 @@ body.zr-site-shell::after,
 }
 
 .zr-site-shell .zr-point-item strong {
-  color: var(--site-lav-dark);
+  color: var(--site-ink);
 }
 
 .zr-site-shell .zr-inline-coin-card {
@@ -714,7 +714,7 @@ body.zr-site-shell::after,
 }
 
 .zr-site-shell .zr-inline-coin-copy span {
-  color: #8c6f5a;
+  color: var(--site-ink);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -722,14 +722,14 @@ body.zr-site-shell::after,
 }
 
 .zr-site-shell .zr-inline-coin-copy small {
-  color: var(--site-ink-soft);
+  color: var(--site-ink);
   font-size: 0.8rem;
   line-height: 1.45;
 }
 
 .zr-site-shell .zr-inline-coin-card strong {
   flex-shrink: 0;
-  color: var(--site-lav-dark);
+  color: var(--site-ink);
   font-size: 1rem;
   font-weight: 800;
   text-align: right;
@@ -785,6 +785,12 @@ body.zr-site-shell::after,
 }
 
 .zr-site-shell .zr-tukar-modal-card {
+  width: min(680px, calc(100vw - 40px));
+  max-height: calc(100dvh - 72px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable both-edges;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
   border: 1px solid rgba(210, 186, 153, 0.92);
   background: #fffaf2;
   box-shadow: 0 8px 20px rgba(53, 31, 16, 0.12);
@@ -815,6 +821,49 @@ body.zr-site-shell::after,
 .zr-site-shell .zr-brand img {
   filter: none !important;
   animation: none !important;
+}
+
+.zr-site-shell .zr-tukar-modal-card > h3,
+.zr-site-shell .zr-tukar-modal-card > p {
+  padding-right: 54px;
+}
+
+.zr-site-shell .zr-tukar-modal-close {
+  position: sticky;
+  top: 8px;
+  right: 0;
+  margin: -2px 0 10px auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(58, 35, 18, 0.12);
+  z-index: 6;
+}
+
+.zr-site-shell .zr-tukar-form > button[type="submit"],
+.zr-site-shell .zr-ewallet-action-row {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+}
+
+.zr-site-shell .zr-tukar-form > button[type="submit"] {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 2px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 18px rgba(255, 250, 242, 0.96);
+}
+
+.zr-site-shell .zr-ewallet-action-row {
+  gap: 10px;
+  padding-top: 10px;
+  padding-bottom: calc(2px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(255, 250, 242, 0) 0%, rgba(255, 250, 242, 0.94) 24%, rgba(255, 250, 242, 1) 100%);
+}
+
+.zr-site-shell .zr-ewallet-action-row > button {
+  min-height: 50px;
 }
 
 .zr-site-shell .zr-option-grid {
@@ -896,6 +945,60 @@ body.zr-site-shell::after,
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.zr-site-shell .zr-user-meta strong,
+.zr-site-shell .zr-user-meta span,
+.zr-site-shell .zr-point-item span,
+.zr-site-shell .zr-point-item strong,
+.zr-site-shell .zr-auth-row h3,
+.zr-site-shell .zr-auth-row p,
+.zr-site-shell .zr-panel h3,
+.zr-site-shell .zr-panel p,
+.zr-site-shell .zr-soft-card h1,
+.zr-site-shell .zr-soft-card h2,
+.zr-site-shell .zr-soft-card h3,
+.zr-site-shell .zr-soft-card h4,
+.zr-site-shell .zr-soft-card p,
+.zr-site-shell .zr-card h1,
+.zr-site-shell .zr-card h2,
+.zr-site-shell .zr-card h3,
+.zr-site-shell .zr-card h4,
+.zr-site-shell .zr-card p,
+.zr-site-shell .zr-option-card strong,
+.zr-site-shell .zr-option-card small,
+.zr-site-shell .zr-tukar-form label,
+.zr-site-shell .zr-tukar-form label span,
+.zr-site-shell .zr-tukar-form small,
+.zr-site-shell .zr-redeem label,
+.zr-site-shell .zr-redeem small,
+.zr-site-shell .zr-category-note,
+.zr-site-shell .zr-history-meta,
+.zr-site-shell .zr-diamond-summary-item span,
+.zr-site-shell .zr-diamond-summary-item strong,
+.zr-site-shell .zr-diamond-block-title,
+.zr-site-shell .zr-diamond-field-hint,
+.zr-site-shell .zr-ewallet-selected-card strong,
+.zr-site-shell .zr-ewallet-selected-card small,
+.zr-site-shell .zr-ewallet-convert-title,
+.zr-site-shell .zr-ewallet-convert-text,
+.zr-site-shell .zr-inline-coin-copy span,
+.zr-site-shell .zr-inline-coin-copy small,
+.zr-site-shell .zr-inline-coin-card strong {
+  color: var(--site-ink);
+}
+
+.zr-site-shell .zr-redeem input,
+.zr-site-shell .zr-tukar-form input,
+.zr-site-shell .zr-tukar-form select,
+.zr-site-shell .zr-tukar-form textarea {
+  color: var(--site-ink);
+}
+
+.zr-site-shell .zr-redeem input::placeholder,
+.zr-site-shell .zr-tukar-form input::placeholder,
+.zr-site-shell .zr-tukar-form textarea::placeholder {
+  color: rgba(17, 17, 17, 0.62);
 }
 
 .zr-page-tukar .zr-tukar-menu-card {
@@ -2691,6 +2794,57 @@ body.zr-site-shell::after,
 }
 
 @media (max-width: 520px) {
+  .zr-site-shell .zr-tukar-modal-shell {
+    padding: 12px 12px calc(18px + env(safe-area-inset-bottom));
+    place-items: center;
+  }
+
+  .zr-site-shell .zr-tukar-modal-card {
+    width: min(540px, calc(100vw - 28px));
+    max-height: calc(100dvh - 96px);
+    padding: 14px 12px calc(14px + env(safe-area-inset-bottom));
+    border-radius: 18px;
+  }
+
+  .zr-site-shell .zr-tukar-modal-card > h3 {
+    margin-bottom: 6px;
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .zr-site-shell .zr-tukar-modal-card > p {
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .zr-site-shell .zr-tukar-modal-close {
+    top: 6px;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 8px;
+  }
+
+  .zr-site-shell .zr-inline-coin-card {
+    margin-bottom: 14px;
+    padding: 12px 13px;
+    border-radius: 16px;
+  }
+
+  .zr-site-shell .zr-tukar-form {
+    gap: 8px;
+  }
+
+  .zr-site-shell .zr-tukar-form > button[type="submit"] {
+    min-height: 48px;
+    font-size: 0.92rem;
+  }
+
+  .zr-site-shell .zr-ewallet-action-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
   .zr-redeem-box .zr-redeem,
   .zr-home-product-grid,
   .zr-gacha-grid,
@@ -2858,8 +3012,8 @@ body.zr-site-shell::after,
 }
 
 body.zr-site-shell[data-zr-theme="dark"] {
-  --site-ink: #f7e7d6;
-  --site-ink-soft: #bca491;
+  --site-ink: #ffffff;
+  --site-ink-soft: #ffffff;
   --site-line: rgba(245, 221, 197, 0.12);
   --site-line-strong: rgba(245, 221, 197, 0.2);
   --site-card: rgba(34, 24, 19, 0.94);
@@ -3032,7 +3186,7 @@ body.zr-site-shell[data-zr-theme="dark"] .zr-tukar-form textarea {
 body.zr-site-shell[data-zr-theme="dark"] .zr-redeem input::placeholder,
 body.zr-site-shell[data-zr-theme="dark"] .zr-tukar-form input::placeholder,
 body.zr-site-shell[data-zr-theme="dark"] .zr-tukar-form textarea::placeholder {
-  color: #8f7d6f;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 body.zr-site-shell[data-zr-theme="dark"] .zr-btn.secondary,
@@ -3177,13 +3331,28 @@ body.zr-site-shell[data-zr-theme="dark"] .zr-point-item strong,
 body.zr-site-shell[data-zr-theme="dark"] .zr-coin-item strong,
 body.zr-site-shell[data-zr-theme="dark"] .zr-inline-coin-card strong,
 body.zr-site-shell[data-zr-theme="dark"] .zr-product-price {
-  color: #ffcf99;
+  color: var(--site-ink);
 }
 
 body.zr-site-shell[data-zr-theme="dark"] .zr-option-icon,
 body.zr-site-shell[data-zr-theme="dark"] .zr-icon-tile {
   background: linear-gradient(145deg, rgba(255, 219, 188, 0.14), rgba(161, 104, 64, 0.18));
   color: #ffd9b7;
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-tukar-form > button[type="submit"] {
+  box-shadow: 0 -10px 18px rgba(24, 17, 13, 0.96);
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-ewallet-action-row {
+  background: linear-gradient(180deg, rgba(24, 17, 13, 0) 0%, rgba(24, 17, 13, 0.94) 24%, rgba(24, 17, 13, 1) 100%);
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-tukar-modal-close {
+  border-color: rgba(255, 228, 205, 0.1);
+  background: rgba(46, 33, 27, 0.96);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
 }
 
 body.zr-site-shell[data-zr-theme="dark"] .zr-gacha-board-wrap {
