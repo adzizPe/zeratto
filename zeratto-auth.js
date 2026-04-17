@@ -18,8 +18,12 @@
   const CODES_PATH = "zerattoRedeemCodes";
   const EXCHANGE_PATH = "zerattoExchangeRequests";
   const EXCHANGE_USER_PATH = "zerattoExchangeByUser";
+  const GACHA_CONFIG_PATH = "zerattoLuckyDrawConfig";
+  const GACHA_LOGS_PATH = "zerattoLuckyDrawSpinLogs";
   const USER_POINTS_STORAGE_KEY = "zerattoUserPoints";
   const USER_POINTS_EVENT = "zerattoPointsUpdated";
+  const USER_GACHA_STORAGE_KEY = "zerattoUserGachaState";
+  const USER_GACHA_EVENT = "zerattoGachaUpdated";
 
   const CODE_IMPORT_ALLOWLIST = ["anggasrg11@gmail.com"];
   const DEFAULT_REDEEM_RUPIAH = 10;
@@ -27,6 +31,8 @@
   const EWALLET_RUPIAH_PER_COIN = 10;
   const EWALLET_TYPES = ["DANA", "GoPay", "OVO", "ShopeePay"];
   const PULSA_OPERATORS = ["Telkomsel", "Axis", "XL", "Tri", "IM3", "Smartfren"];
+  const DEFAULT_GACHA_REWARD_VALUES = [5, 8, 10, 12, 15, 18, 20, 25, 30];
+  const GACHA_BOARD_SIZE = 9;
 
   const TUKAR_LABELS = {
     diamond: "Diamond Game",
@@ -41,6 +47,7 @@
   let provider = null;
   let currentUser = null;
   let currentPoints = 0;
+  let currentGachaState = { totalRedeems: 0, usedSpins: 0, availableSpins: 0 };
   let currentTukarOption = "diamond";
   let tukarFormEnabled = false;
   const APP_LOGIN_POLL_MS = 250;
@@ -49,6 +56,12 @@
 
   function byId(id) {
     return document.getElementById(id);
+  }
+
+  function isTukarSoonPage() {
+    const body = document.body;
+    if (!body || !body.dataset) return false;
+    return String(body.dataset.zrTukarStatus || "").trim().toLowerCase() === "soon";
   }
 
   function toInt(value, fallback) {
@@ -200,6 +213,208 @@
         }
       }));
     } catch (_err) {}
+  }
+
+  function buildGachaState(totalRedeems, usedSpins) {
+    const safeRedeems = toInt(totalRedeems, 0);
+    const safeUsedSpins = Math.min(safeRedeems, toInt(usedSpins, 0));
+    return {
+      totalRedeems: safeRedeems,
+      usedSpins: safeUsedSpins,
+      availableSpins: Math.max(0, safeRedeems - safeUsedSpins)
+    };
+  }
+
+  function dispatchUserGachaState(state) {
+    const safeState = buildGachaState(
+      state && state.totalRedeems,
+      state && state.usedSpins
+    );
+
+    try {
+      window.dispatchEvent(new CustomEvent(USER_GACHA_EVENT, {
+        detail: safeState
+      }));
+    } catch (_err) {}
+  }
+
+  function storeCachedUserGachaState(state) {
+    const safeState = buildGachaState(
+      state && state.totalRedeems,
+      state && state.usedSpins
+    );
+    currentGachaState = safeState;
+
+    try {
+      localStorage.setItem(USER_GACHA_STORAGE_KEY, JSON.stringify(safeState));
+    } catch (_err) {}
+
+    try {
+      sessionStorage.setItem(USER_GACHA_STORAGE_KEY, JSON.stringify(safeState));
+    } catch (_err) {}
+
+    dispatchUserGachaState(safeState);
+    return safeState;
+  }
+
+  function clearCachedUserGachaState() {
+    try {
+      localStorage.removeItem(USER_GACHA_STORAGE_KEY);
+    } catch (_err) {}
+
+    try {
+      sessionStorage.removeItem(USER_GACHA_STORAGE_KEY);
+    } catch (_err) {}
+
+    currentGachaState = buildGachaState(0, 0);
+    dispatchUserGachaState(currentGachaState);
+  }
+
+  async function loadUserGachaState(uid, userRedeems) {
+    const totalRedeems = Array.isArray(userRedeems) ? userRedeems.length : 0;
+    const spinsRef = db.ref(USERS_PATH + "/" + uid + "/gachaUsedSpins");
+    const snap = await spinsRef.once("value");
+    return buildGachaState(totalRedeems, snap.val());
+  }
+
+  function getGachaRequirementMessage(state) {
+    const safeState = buildGachaState(
+      state && state.totalRedeems,
+      state && state.usedSpins
+    );
+
+    if (safeState.totalRedeems <= 0) {
+      return "Redeem kode dulu minimal 1 kali untuk mendapat 1 spin.";
+    }
+
+    if (safeState.availableSpins <= 0) {
+      return "Spin kamu habis. Redeem kode lagi untuk menambah spin.";
+    }
+
+    return "Spin tersedia " + safeState.availableSpins + "x. Setiap 1 redeem = 1 spin.";
+  }
+
+  function normalizeGachaRewardList(raw, fallbackList, maxItems) {
+    const fallback = Array.isArray(fallbackList) && fallbackList.length
+      ? fallbackList
+      : DEFAULT_GACHA_REWARD_VALUES;
+    const limit = Math.max(1, toInt(maxItems, fallback.length || DEFAULT_GACHA_REWARD_VALUES.length));
+    let items = [];
+
+    if (Array.isArray(raw)) {
+      items = raw.slice();
+    } else if (typeof raw === "string") {
+      items = raw.split(/[\s,|]+/);
+    }
+
+    items = items
+      .map(function (value) { return toInt(value, 0); })
+      .filter(function (value) { return value > 0; });
+
+    if (!items.length) {
+      items = fallback.slice();
+    }
+
+    return items.slice(0, limit);
+  }
+
+  function buildLuckyDrawBoardValues(rewardPool, forcedReward) {
+    const pool = normalizeGachaRewardList(rewardPool, DEFAULT_GACHA_REWARD_VALUES, 120);
+    const board = [];
+    for (let index = 0; index < GACHA_BOARD_SIZE; index += 1) {
+      board.push(pool[Math.floor(Math.random() * pool.length)]);
+    }
+
+    const safeForcedReward = toInt(forcedReward, 0);
+    if (safeForcedReward > 0 && board.indexOf(safeForcedReward) < 0) {
+      board[Math.floor(Math.random() * board.length)] = safeForcedReward;
+    }
+
+    return board;
+  }
+
+  async function loadLuckyDrawConfig(uid) {
+    const safeUid = sanitizeFirebaseKey(uid);
+    const snap = await db.ref(GACHA_CONFIG_PATH).once("value");
+    const root = snap.val() || {};
+    const defaults = root.defaults && typeof root.defaults === "object" ? root.defaults : {};
+    const users = root.users && typeof root.users === "object" ? root.users : {};
+    const userConfig = safeUid && users[safeUid] && typeof users[safeUid] === "object" ? users[safeUid] : {};
+    const defaultRewards = normalizeGachaRewardList(defaults.rewards, DEFAULT_GACHA_REWARD_VALUES, 120);
+    const userRewards = normalizeGachaRewardList(userConfig.rewards, defaultRewards, 120);
+    const forcedQueue = normalizeGachaRewardList(userConfig.forcedQueue, [], 120);
+    const boardValues = buildLuckyDrawBoardValues(userRewards, forcedQueue[0]);
+
+    return {
+      configKey: safeUid,
+      defaultRewards: defaultRewards,
+      rewards: userRewards,
+      forcedQueue: forcedQueue,
+      boardValues: boardValues,
+      hasUserOverride: Boolean(
+        (Array.isArray(userConfig.rewards) && userConfig.rewards.length) ||
+        (Array.isArray(userConfig.forcedQueue) && userConfig.forcedQueue.length)
+      )
+    };
+  }
+
+  async function consumeLuckyDrawQueue(uid, expectedReward) {
+    const safeUid = sanitizeFirebaseKey(uid);
+    if (!safeUid) return;
+
+    const queueRef = db.ref(GACHA_CONFIG_PATH + "/users/" + safeUid + "/forcedQueue");
+    await queueRef.transaction(function (current) {
+      const queue = normalizeGachaRewardList(current, [], 120);
+      if (!queue.length) return current;
+      if (toInt(expectedReward, 0) > 0 && queue[0] !== toInt(expectedReward, 0)) {
+        return current;
+      }
+      const nextQueue = queue.slice(1);
+      return nextQueue.length ? nextQueue : null;
+    });
+  }
+
+  async function writeLuckyDrawLog(payload) {
+    if (!payload || typeof payload !== "object") return;
+    await db.ref(GACHA_LOGS_PATH).push({
+      uid: String(payload.uid || ""),
+      name: String(payload.name || ""),
+      email: String(payload.email || ""),
+      photoURL: String(payload.photoURL || ""),
+      rewardCoin: toInt(payload.rewardCoin, 0),
+      boardRewards: normalizeGachaRewardList(payload.boardRewards, DEFAULT_GACHA_REWARD_VALUES, GACHA_BOARD_SIZE),
+      winningIndex: toInt(payload.winningIndex, 0),
+      source: String(payload.source || "random"),
+      remainingSpins: toInt(payload.remainingSpins, 0),
+      totalRedeems: toInt(payload.totalRedeems, 0),
+      pointsAfter: toInt(payload.pointsAfter, 0),
+      spinAt: firebase.database.ServerValue.TIMESTAMP
+    });
+  }
+
+  async function getLuckyDrawPreview() {
+    if (!currentUser) {
+      return {
+        ok: false,
+        boardRewards: buildLuckyDrawBoardValues(DEFAULT_GACHA_REWARD_VALUES, 0),
+        state: buildGachaState(currentGachaState.totalRedeems, currentGachaState.usedSpins)
+      };
+    }
+
+    try {
+      const config = await loadLuckyDrawConfig(currentUser.uid);
+      return {
+        ok: true,
+        boardRewards: config.boardValues,
+        state: buildGachaState(currentGachaState.totalRedeems, currentGachaState.usedSpins)
+      };
+    } catch (_err) {
+      return {
+        ok: false,
+        boardRewards: buildLuckyDrawBoardValues(DEFAULT_GACHA_REWARD_VALUES, 0),
+        state: buildGachaState(currentGachaState.totalRedeems, currentGachaState.usedSpins)
+      };
+    }
   }
 
   function storeCachedUserPoints(points) {
@@ -554,6 +769,7 @@
       hint.textContent = "Silakan login dulu dengan akun Google.";
       if (box) box.hidden = true;
       if (pointSummary) pointSummary.hidden = true;
+      if (photo) photo.hidden = true;
       hideAlert("zrProfileAlert");
       return;
     }
@@ -565,7 +781,11 @@
     hint.textContent = "Login aktif. Akun ini dipakai untuk fitur redeem dan coin.";
     if (box) box.hidden = false;
     if (pointSummary) pointSummary.hidden = false;
-    if (photo) photo.src = displayPhoto;
+    if (photo) {
+      photo.src = displayPhoto;
+      photo.hidden = false;
+      photo.alt = "Foto Google " + displayName;
+    }
     if (name) name.textContent = displayName;
     if (email) email.textContent = displayEmail;
 
@@ -611,6 +831,7 @@
   function setTukarUserUI(user) {
     const hint = byId("zrTukarAuthHint");
     if (!hint) return;
+    const isSoonPage = isTukarSoonPage();
 
     const userBox = byId("zrTukarUserBox");
     const photo = byId("zrTukarUserPhoto");
@@ -618,8 +839,14 @@
     const email = byId("zrTukarUserEmail");
 
     if (!user) {
-      hint.textContent = "Login Google dulu untuk buka form penukaran.";
+      hint.textContent = isSoonPage
+        ? "Kategori Mainan sedang kami siapkan. Form penukaran belum dibuka sementara."
+        : "Login Google dulu untuk buka form penukaran.";
       if (userBox) userBox.hidden = true;
+      if (isSoonPage) {
+        hideAlert("zrTukarAuthAlert");
+        return;
+      }
       showAlert("zrTukarAuthAlert", "info", "Akses tukar hadiah dikunci sampai login Google berhasil.");
       return;
     }
@@ -628,7 +855,9 @@
     const displayEmail = user.email || "Email tidak tersedia";
     const displayPhoto = user.photoURL || fallbackAvatar(displayName || displayEmail);
 
-    hint.textContent = "Login aktif. Isi form penukaran, lalu admin akan proses manual.";
+    hint.textContent = isSoonPage
+      ? "Login aktif. Coin akun dan riwayat pengajuanmu tetap bisa dilihat di halaman ini."
+      : "Login aktif. Isi form penukaran, lalu admin akan proses manual.";
     if (userBox) userBox.hidden = false;
     if (photo) photo.src = displayPhoto;
     if (name) name.textContent = displayName;
@@ -829,6 +1058,7 @@
     } else {
       currentPoints = 0;
       clearCachedUserPoints();
+      clearCachedUserGachaState();
       const pointSummary = byId("zrProfilePointSummary");
       const pointEl = byId("zrProfilePointValue");
       if (pointSummary) pointSummary.hidden = true;
@@ -862,6 +1092,7 @@
     if (!byId("zrRedeemForm")) return;
 
     if (!user) {
+      clearCachedUserGachaState();
       setRedeemFormEnabled(false);
       showAlert("zrRedeemMessage", "info", "Login Google dulu agar bisa melakukan redeem.");
       return;
@@ -869,6 +1100,7 @@
 
     const snap = await db.ref(REDEEMS_PATH).once("value");
     const userRedeems = extractUserRedeemsFromRoot(snap.val(), user.uid);
+    const gachaState = storeCachedUserGachaState(await loadUserGachaState(user.uid, userRedeems));
 
     setRedeemFormEnabled(true);
     if (!userRedeems.length) {
@@ -883,8 +1115,133 @@
     showAlert(
       "zrRedeemMessage",
       "success",
-      "Total klaim akun ini: " + userRedeems.length + " kode. Klaim terakhir: " + code + " | Coin: +" + formatRupiah(pointGain) + " | Waktu: " + redeemedAt
+      "Total klaim akun ini: " + userRedeems.length + " kode. Klaim terakhir: " + code + " | Coin: +" + formatRupiah(pointGain) + " | Spin: " + gachaState.availableSpins + "x | Waktu: " + redeemedAt
     );
+  }
+
+  async function spinLuckyDraw() {
+    if (!currentUser) {
+      return {
+        ok: false,
+        code: "LOGIN_REQUIRED",
+        state: buildGachaState(0, 0),
+        message: "Login Google dulu sebelum mulai spin."
+      };
+    }
+
+    let safeState = buildGachaState(currentGachaState.totalRedeems, currentGachaState.usedSpins);
+
+    if (safeState.availableSpins <= 0) {
+      const snap = await db.ref(REDEEMS_PATH).once("value");
+      const userRedeems = extractUserRedeemsFromRoot(snap.val(), currentUser.uid);
+      safeState = storeCachedUserGachaState(await loadUserGachaState(currentUser.uid, userRedeems));
+      if (safeState.availableSpins <= 0) {
+        return {
+          ok: false,
+          code: safeState.totalRedeems <= 0 ? "REDEEM_REQUIRED" : "NO_SPIN_LEFT",
+          state: safeState,
+          message: getGachaRequirementMessage(safeState)
+        };
+      }
+    }
+
+    const totalRedeems = toInt(safeState.totalRedeems, 0);
+    let luckyConfig = null;
+    try {
+      luckyConfig = await loadLuckyDrawConfig(currentUser.uid);
+    } catch (_err) {
+      luckyConfig = {
+        boardValues: buildLuckyDrawBoardValues(DEFAULT_GACHA_REWARD_VALUES, 0),
+        forcedQueue: []
+      };
+    }
+
+    const forcedReward = toInt(luckyConfig && luckyConfig.forcedQueue && luckyConfig.forcedQueue[0], 0);
+    const boardRewards = Array.isArray(luckyConfig && luckyConfig.boardValues) && luckyConfig.boardValues.length
+      ? luckyConfig.boardValues.slice(0, GACHA_BOARD_SIZE)
+      : buildLuckyDrawBoardValues(DEFAULT_GACHA_REWARD_VALUES, forcedReward);
+    let winningIndex = forcedReward > 0 ? boardRewards.indexOf(forcedReward) : -1;
+    if (winningIndex < 0) {
+      winningIndex = Math.floor(Math.random() * boardRewards.length);
+    }
+    const safeRewardCoin = toInt(forcedReward > 0 ? forcedReward : boardRewards[winningIndex], 0);
+    if (safeRewardCoin <= 0) {
+      return {
+        ok: false,
+        code: "INVALID_REWARD",
+        state: safeState,
+        message: "Hadiah lucky draw belum siap."
+      };
+    }
+
+    const userRef = db.ref(USERS_PATH + "/" + currentUser.uid);
+    const spinTx = await userRef.transaction((current) => {
+      const nextData = current && typeof current === "object" ? Object.assign({}, current) : {};
+      const currentUsedSpins = toInt(nextData.gachaUsedSpins, 0);
+      if (currentUsedSpins >= totalRedeems) return;
+      nextData.gachaUsedSpins = currentUsedSpins + 1;
+      nextData.points = toInt(nextData.points, 0) + safeRewardCoin;
+      return nextData;
+    });
+
+    let nextState = safeState;
+
+    if (spinTx.committed) {
+      const nextUserData = spinTx.snapshot.val() || {};
+      currentPoints = toInt(nextUserData.points, 0);
+      storeCachedUserPoints(currentPoints);
+      updateProfilePointUI(currentPoints);
+      updateTukarPointUI(currentPoints);
+      nextState = storeCachedUserGachaState(buildGachaState(totalRedeems, nextUserData.gachaUsedSpins));
+      if (forcedReward > 0) {
+        consumeLuckyDrawQueue(currentUser.uid, safeRewardCoin).catch(function (err) {
+          console.error("[Zeratto Lucky Queue Error]", err);
+        });
+      }
+      writeLuckyDrawLog({
+        uid: currentUser.uid,
+        name: currentUser.displayName || "Pengguna Zeratto",
+        email: currentUser.email || "",
+        photoURL: currentUser.photoURL || "",
+        rewardCoin: safeRewardCoin,
+        boardRewards: boardRewards,
+        winningIndex: winningIndex,
+        source: forcedReward > 0 ? "forced" : "random",
+        remainingSpins: nextState.availableSpins,
+        totalRedeems: nextState.totalRedeems,
+        pointsAfter: currentPoints
+      }).catch(function (err) {
+        console.error("[Zeratto Lucky Log Error]", err);
+      });
+      return {
+        ok: true,
+        code: "OK",
+        state: nextState,
+        rewardCoin: safeRewardCoin,
+        boardRewards: boardRewards,
+        winningIndex: winningIndex,
+        currentPoints: currentPoints,
+        message: "Lucky draw berhasil."
+      };
+    }
+
+    const latestUserSnap = await userRef.once("value");
+    const latestUserData = latestUserSnap.val() || {};
+    currentPoints = toInt(latestUserData.points, currentPoints);
+    storeCachedUserPoints(currentPoints);
+    updateProfilePointUI(currentPoints);
+    updateTukarPointUI(currentPoints);
+    nextState = storeCachedUserGachaState(buildGachaState(totalRedeems, latestUserData.gachaUsedSpins));
+    return {
+      ok: false,
+      code: nextState.totalRedeems <= 0 ? "REDEEM_REQUIRED" : "NO_SPIN_LEFT",
+      state: nextState,
+      message: getGachaRequirementMessage(nextState)
+    };
+  }
+
+  async function consumeGachaSpin(_rewardCoin) {
+    return spinLuckyDraw();
   }
 
   function extractUserRedeemsFromRoot(rootData, uid) {
@@ -1102,7 +1459,7 @@
       showAlert(
         "zrRedeemMessage",
         "success",
-        "Redeem berhasil. Coin bertambah " + formatRupiah(pointGain) + "."
+        "Redeem berhasil. Coin bertambah " + formatRupiah(pointGain) + " dan kamu dapat 1x spin bonus."
       );
       updateTukarPointUI(currentPoints);
       await syncRedeemState(currentUser);
@@ -1398,6 +1755,15 @@
       return importRedeemCodes(lines);
     }
   };
+
+  window.ZerattoAuth = Object.assign(window.ZerattoAuth || {}, {
+    getLuckyDrawPreview: getLuckyDrawPreview,
+    spinLuckyDraw: spinLuckyDraw,
+    consumeGachaSpin: consumeGachaSpin,
+    getCachedGachaState: function () {
+      return buildGachaState(currentGachaState.totalRedeems, currentGachaState.usedSpins);
+    }
+  });
 
   async function signInGoogle() {
     if (isProbablyAppContext()) {

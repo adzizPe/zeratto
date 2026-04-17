@@ -781,11 +781,14 @@
 
     const filterYmd = state.recapDate || "";
     const rows = buildCodeRecapRows(filterYmd);
+    const validRows = rows.filter(function (row) {
+      return row.statusIn && !row.statusOut;
+    });
     const totalIn = rows.filter(function (row) { return row.statusIn; }).length;
     const totalOut = rows.filter(function (row) { return row.statusOut; }).length;
 
     dateLabelEl.textContent = filterYmd ? formatDateOnly(ymdToLocalDate(filterYmd)) : "Semua Tanggal";
-    totalCodesEl.textContent = String(rows.length);
+    totalCodesEl.textContent = String(validRows.length);
     totalInEl.textContent = String(totalIn);
     totalOutEl.textContent = String(totalOut);
 
@@ -796,8 +799,8 @@
         : "Reminder admin: kirim rekap ini ke admin setiap hari Minggu.";
     }
 
-    const MAX_RENDER = 2000;
-    const renderRows = rows.slice(0, MAX_RENDER);
+    const MAX_RENDER = 5000;
+    const renderRows = validRows.slice(0, MAX_RENDER);
     if (!renderRows.length) {
       tbody.innerHTML = "";
       emptyEl.hidden = false;
@@ -806,20 +809,28 @@
     }
 
     emptyEl.hidden = true;
-    tbody.innerHTML = renderRows.map(function (row) {
+    const gridRows = [];
+    for (let i = 0; i < renderRows.length; i += 5) {
+      gridRows.push(renderRows.slice(i, i + 5));
+    }
+
+    tbody.innerHTML = gridRows.map(function (chunk) {
+      const cells = [];
+      for (let i = 0; i < 5; i += 1) {
+        const row = chunk[i];
+        cells.push("<td>" + escapeHtml(row ? row.code : "") + "</td>");
+      }
       return [
         "<tr>",
-        "<td>", escapeHtml(row.code), "</td>",
-        "<td>", row.statusIn ? "☑" : "-", "</td>",
-        "<td>", row.statusOut ? "✅" : "-", "</td>",
+        cells.join(""),
         "</tr>"
       ].join("");
     }).join("");
 
     if (limitHintEl) {
-      if (rows.length > renderRows.length) {
+      if (validRows.length > renderRows.length) {
         limitHintEl.hidden = false;
-        limitHintEl.textContent = "Menampilkan " + renderRows.length + " dari " + rows.length + " baris. Export tetap memuat semua baris.";
+        limitHintEl.textContent = "Menampilkan " + renderRows.length + " dari " + validRows.length + " kode valid. Export tetap memuat semua kode valid.";
       } else {
         limitHintEl.hidden = true;
       }

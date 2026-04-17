@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Zeratto - Tukar Hadiah Mainan</title>
-  <meta name="description" content="Tukar hadiah Zeratto untuk mainan dengan tampilan yang lebih hidup dan lebih informatif.">
+  <meta name="description" content="Kategori hadiah mainan Zeratto sedang disiapkan dan akan segera dibuka kembali.">
   <meta name="google-adsense-account" content="ca-pub-2047280217150875">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2047280217150875" crossorigin="anonymous"></script>
   <link rel="icon" href="./assets/zeratto-coklat.png" type="image/png">
@@ -12,9 +12,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
-  <link rel="stylesheet" href="./zeratto-site.css?v=20260410_20">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260414_6">
 </head>
-<body class="zr-site-shell zr-page-tukar-category" data-zr-tukar-option="mainan">
+<body class="zr-site-shell zr-page-tukar-category" data-zr-tukar-option="mainan" data-zr-tukar-status="soon">
   <header class="zr-navbar">
     <div class="zr-wrap zr-nav-inner">
       <a class="zr-brand" href="./">
@@ -37,7 +37,7 @@
           <div class="zr-auth-row">
             <div>
               <h3>Status Akun Tukar Hadiah</h3>
-              <p id="zrTukarAuthHint">Login Google dulu untuk buka form penukaran.</p>
+              <p id="zrTukarAuthHint">Kategori Mainan sedang kami siapkan. Form penukaran belum dibuka sementara.</p>
             </div>
             <div class="zr-auth-actions">
               <button id="zrLoginBtn" class="zr-login-btn" type="button">Login dengan Google</button>
@@ -65,73 +65,19 @@
 
         <div class="zr-soft-card zr-reveal">
           <span class="zr-kicker"><i data-lucide="gamepad-2"></i>Mainan</span>
-          <h3>Form Penukaran</h3>
-          <p>Kalau popup tadi ditutup, buka lagi dari tombol ini.</p>
+          <h3>Segera Hadir</h3>
+          <p>Kategori hadiah mainan sedang kami siapkan dulu. Form penukarannya belum dibuka sementara ini.</p>
           <div class="zr-cta-row">
-            <button id="zrTukarOpenBtn" class="zr-btn primary" type="button">Buka Form</button>
             <a class="zr-btn secondary" href="./tukarcoin.html">Kembali</a>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="zr-section zr-tukar-modal-shell" id="zrTukarModalShell" hidden>
-      <div class="zr-tukar-modal-backdrop" id="zrTukarModalBackdrop"></div>
-      <div class="zr-card zr-panel zr-tukar-modal-card" role="dialog" aria-modal="true" aria-labelledby="zrTukarFormTitle">
-        <button type="button" class="zr-tukar-modal-close" id="zrTukarModalClose" aria-label="Tutup form penukaran">
-          <i data-lucide="x"></i>
-        </button>
-        <h3 id="zrTukarFormTitle">Form Penukaran: Mainan</h3>
-        <p>Isi nama hadiah dan alamat lengkap pengiriman.</p>
-
-        <div id="zrTukarMessage" class="zr-alert info" hidden></div>
-
-        <div class="zr-inline-coin-card" data-zr-user-coin-box hidden>
-          <div class="zr-inline-coin-copy">
-            <span>Coin Kamu</span>
-            <small data-zr-user-coin-note>Login dulu supaya coin akun kamu terbaca.</small>
-          </div>
-          <strong data-zr-user-coin>0 Coin</strong>
-        </div>
-
-        <form class="zr-tukar-form" data-option="mainan">
-          <div class="zr-form-grid">
-            <label>
-              Nominal coin yang ditukar
-              <input name="pointUsed" type="number" min="1" step="1" required placeholder="Contoh: 1000">
-            </label>
-            <label>
-              WhatsApp aktif
-              <input name="whatsapp" type="tel" required placeholder="08xxxxxxxxxx">
-            </label>
-          </div>
-
-          <div class="zr-option-fields">
-            <p class="zr-category-note">Kategori Mainan: isi nama hadiah dan alamat lengkap pengiriman.</p>
-            <label>
-              Nama mainan yang diinginkan
-              <input name="toyName" type="text" required placeholder="Contoh: Action Figure">
-            </label>
-            <label>
-              Alamat lengkap pengiriman
-              <textarea name="toyAddress" required rows="3" placeholder="Jalan, nomor rumah, kelurahan, kecamatan, kota, kode pos"></textarea>
-            </label>
-          </div>
-
-          <label>
-            Catatan tambahan (opsional)
-            <textarea name="note" rows="3" placeholder="Tambahkan catatan untuk admin"></textarea>
-          </label>
-
-          <button type="submit">Kirim Pengajuan Penukaran</button>
-        </form>
-      </div>
-    </section>
-
     <section class="zr-section">
       <div class="zr-card zr-panel zr-reveal">
         <h3>Riwayat Pengajuan Kamu</h3>
-        <p>Daftar ini hanya untuk akun login aktif sekarang.</p>
+        <p>Kalau sebelumnya pernah ada pengajuan, riwayat akun aktif tetap muncul di sini.</p>
         <div id="zrTukarHistory" class="zr-tukar-history"></div>
       </div>
     </section>
@@ -148,9 +94,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="./zeratto-auth.js?v=20260410_14" defer></script>
-  <script src="./zeratto-popup.js?v=20260409_1" defer></script>
+  <script src="./zeratto-auth.js?v=20260413_3" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="./zeratto-site.js?v=20260410_19" defer></script>
+  <script src="./zeratto-site.js?v=20260413_2" defer></script>
 </body>
 </html>

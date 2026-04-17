@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./zeratto.css?v=20260407_7">
-  <link rel="stylesheet" href="./zeratto-site.css?v=20260410_20">
+  <link rel="stylesheet" href="./zeratto-site.css?v=20260414_6">
 </head>
 <body class="zr-site-shell">
   <header class="zr-navbar">
@@ -74,66 +74,54 @@
       </div>
     </section>
 
-    <section class="zr-section">
+    <section class="zr-section" id="zrGachaSection" hidden>
       <div class="zr-shell-card zr-gacha-card">
         <div class="zr-gacha-head">
           <div>
-            <span class="zr-kicker"><i data-lucide="gift"></i>Mini Game</span>
-            <h3>Gacha 9 Hadiah</h3>
-            <p>Sekarang bentuknya jadi satu papan 3 x 3 yang lebih kecil dan lebih interaktif, mirip sistem spin ringan.</p>
+            <h3 id="zrGachaTitle">Lucky Draw</h3>
           </div>
         </div>
         <div class="zr-gacha-machine">
           <div class="zr-gacha-board-wrap">
             <div class="zr-gacha-grid zr-gacha-grid--compact" data-zr-gacha-grid>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="1">
-                <span class="zr-gacha-cell-no">01</span>
-                <strong>Hadiah Misteri</strong>
-              </button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="2">
-                <span class="zr-gacha-cell-no">02</span>
-                <strong>Hadiah Misteri</strong>
-              </button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="3">
-                <span class="zr-gacha-cell-no">03</span>
-                <strong>Hadiah Misteri</strong>
-              </button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="4">
-                <span class="zr-gacha-cell-no">04</span>
-                <strong>Hadiah Misteri</strong>
-              </button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="5">
-                <span class="zr-gacha-cell-no">05</span>
-                <strong>Hadiah Misteri</strong>
-              </button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="6">
-                <span class="zr-gacha-cell-no">06</span>
-                <strong>Hadiah Misteri</strong>
-              </button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="7">
-                <span class="zr-gacha-cell-no">07</span>
-                <strong>Hadiah Misteri</strong>
-              </button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="8">
-                <span class="zr-gacha-cell-no">08</span>
-                <strong>Hadiah Misteri</strong>
-              </button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="9">
-                <span class="zr-gacha-cell-no">09</span>
-                <strong>Hadiah Misteri</strong>
-              </button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="1" aria-label="Lucky draw slot 1"></button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="2" aria-label="Lucky draw slot 2"></button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="3" aria-label="Lucky draw slot 3"></button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="4" aria-label="Lucky draw slot 4"></button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="5" aria-label="Lucky draw slot 5"></button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="6" aria-label="Lucky draw slot 6"></button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="7" aria-label="Lucky draw slot 7"></button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="8" aria-label="Lucky draw slot 8"></button>
+              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="9" aria-label="Lucky draw slot 9"></button>
             </div>
           </div>
           <div class="zr-gacha-control-panel">
-            <div id="zrGachaNotice" class="zr-gacha-notice" aria-live="polite">Tekan tombol spin untuk mulai mengacak hadiah.</div>
+            <div class="zr-gacha-stats">
+              <div class="zr-gacha-stat">
+                <span>Spin</span>
+                <strong id="zrGachaSpinValue">0x</strong>
+              </div>
+              <div class="zr-gacha-stat">
+                <span>Redeem</span>
+                <strong id="zrGachaRedeemValue">0x</strong>
+              </div>
+            </div>
+            <div id="zrGachaNotice" class="zr-gacha-notice" aria-live="polite">1 redeem = 1 spin</div>
             <div class="zr-gacha-actions">
-              <button id="zrGachaSpinBtn" class="zr-btn primary" type="button">Mulai Spin</button>
-              <button id="zrGachaResetBtn" class="zr-btn secondary" type="button">Acak Ulang</button>
+              <button id="zrGachaSpinBtn" class="zr-btn primary" type="button">Putar</button>
             </div>
           </div>
         </div>
       </div>
     </section>
+
+    <div class="zr-lucky-popup-shell" id="zrLuckyPopup" hidden aria-live="assertive">
+      <div class="zr-lucky-popup-backdrop" data-zr-lucky-close></div>
+      <div class="zr-lucky-popup-card" role="status" aria-label="Hasil lucky draw">
+        <span class="zr-lucky-popup-icon"><i data-lucide="coins"></i></span>
+        <strong id="zrLuckyPopupValue">20 Coin</strong>
+      </div>
+    </div>
   </main>
 
   <footer class="zr-footer">
@@ -147,8 +135,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="./zeratto-auth.js?v=20260410_13" defer></script>
+  <script src="./zeratto-auth.js?v=20260417_1" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="./zeratto-site.js?v=20260410_19" defer></script>
+  <script src="./zeratto-site.js?v=20260417_1" defer></script>
 </body>
 </html>

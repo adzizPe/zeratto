@@ -127,7 +127,9 @@ body.za-body {
 }
 
 .za-item-actions button.active {
-  box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px var(--za-brand-dark);
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    inset 0 0 0 4px var(--za-brand-dark);
 }
 
 .za-login-error {
@@ -574,6 +576,26 @@ body.za-body {
 .za-table th:nth-child(3) {
   text-align: center;
   width: 110px;
+}
+
+.za-code-grid-table {
+  min-width: 920px;
+  table-layout: fixed;
+}
+
+.za-code-grid-table th,
+.za-code-grid-table td {
+  text-align: center;
+  width: 20%;
+}
+
+.za-code-grid-table td {
+  font-family: "Courier New", monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--za-brand-dark);
+  background: linear-gradient(180deg, #fffdf9 0%, #fff6ea 100%);
 }
 
 .za-toast {

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../zeratto-admin.css?v=20260407_2">
+  <link rel="stylesheet" href="../../zeratto-admin.css?v=20260415_1">
 </head>
 <body class="za-body">
   <div class="za-app" id="zaApp">
@@ -135,7 +135,7 @@
 
           <div class="za-recap-summary" id="zaRecapSummary">
             <div class="za-recap-pill">Tanggal/Bulan/Tahun Terbit: <strong id="zaRecapDateLabel">-</strong></div>
-            <div class="za-recap-pill">Kode Redeem: <strong id="zaRecapTotalCodes">0</strong></div>
+            <div class="za-recap-pill">Kode Redeem Valid: <strong id="zaRecapTotalCodes">0</strong></div>
             <div class="za-recap-pill">Status In: <strong id="zaRecapTotalIn">0</strong></div>
             <div class="za-recap-pill">Status Out: <strong id="zaRecapTotalOut">0</strong></div>
           </div>
@@ -145,18 +145,20 @@
           </p>
 
           <div class="za-table-wrap">
-            <table class="za-table">
+            <table class="za-table za-code-grid-table">
               <thead>
                 <tr>
                   <th>Kode Redeem</th>
-                  <th>Status In</th>
-                  <th>Status Out</th>
+                  <th>Kode Redeem</th>
+                  <th>Kode Redeem</th>
+                  <th>Kode Redeem</th>
+                  <th>Kode Redeem</th>
                 </tr>
               </thead>
               <tbody id="zaCodeRecapBody"></tbody>
             </table>
           </div>
-          <div class="za-empty" id="zaCodeRecapEmpty" hidden>Belum ada data kode untuk tanggal ini.</div>
+          <div class="za-empty" id="zaCodeRecapEmpty" hidden>Belum ada kode redeem valid untuk filter ini.</div>
           <div class="za-empty" id="zaCodeRecapLimitHint" hidden></div>
         </section>
       </section>
@@ -177,6 +179,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="../../zeratto-admin.js?v=20260410_4" defer></script>
+  <script src="../../zeratto-admin.js?v=20260415_1" defer></script>
 </body>
 </html>

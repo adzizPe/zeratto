@@ -1,17 +1,7 @@
 (function () {
   "use strict";
 
-  const GACHA_REWARDS = [
-    "Voucher Diskon 5%",
-    "Bonus 10 Coin",
-    "Gratis 1 Redeem Kesempatan",
-    "Hadiah Snack Mini",
-    "Bonus 25 Coin",
-    "Voucher Belanja 10K",
-    "Hadiah Mystery Box",
-    "Bonus 15 Coin",
-    "Diskon Spesial Mingguan"
-  ];
+  const GACHA_REWARDS = [5, 8, 10, 12, 15, 18, 20, 25, 30];
   const DIAMOND_PACKAGES = {
     "Mobile Legends": [
       { value: "11 Diamond", label: "11 Diamond", note: "Paket pemula", coin: 120 },
@@ -114,6 +104,8 @@
   };
   const USER_POINTS_STORAGE_KEY = "zerattoUserPoints";
   const USER_POINTS_EVENT = "zerattoPointsUpdated";
+  const USER_GACHA_STORAGE_KEY = "zerattoUserGachaState";
+  const USER_GACHA_EVENT = "zerattoGachaUpdated";
   const USER_THEME_STORAGE_KEY = "zerattoTheme";
   const THEME_MEDIA_QUERY = "(prefers-color-scheme: dark)";
   const EWALLET_MIN_COIN = 100;
@@ -269,6 +261,17 @@
     return "Rp " + safeValue.toLocaleString("id-ID");
   }
 
+  function shuffleItems(items) {
+    const cloned = Array.isArray(items) ? items.slice() : [];
+    for (let index = cloned.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      const temp = cloned[index];
+      cloned[index] = cloned[randomIndex];
+      cloned[randomIndex] = temp;
+    }
+    return cloned;
+  }
+
   function calculateEwalletRupiah(points) {
     const safeValue = Number.isFinite(Number(points)) ? Math.max(0, Math.trunc(Number(points))) : 0;
     return safeValue * EWALLET_RUPIAH_PER_COIN;
@@ -310,6 +313,43 @@
       return parsed;
     } catch (_err) {
       return null;
+    }
+  }
+
+  function normalizeGachaState(state) {
+    const totalRedeems = Number.isFinite(Number(state && state.totalRedeems))
+      ? Math.max(0, Math.trunc(Number(state.totalRedeems)))
+      : 0;
+    const usedSpins = Number.isFinite(Number(state && state.usedSpins))
+      ? Math.max(0, Math.trunc(Number(state.usedSpins)))
+      : 0;
+    const safeUsedSpins = Math.min(totalRedeems, usedSpins);
+    return {
+      totalRedeems: totalRedeems,
+      usedSpins: safeUsedSpins,
+      availableSpins: Math.max(0, totalRedeems - safeUsedSpins)
+    };
+  }
+
+  function readStoredGachaState() {
+    let raw = "";
+
+    try {
+      raw = String(localStorage.getItem(USER_GACHA_STORAGE_KEY) || "");
+    } catch (_err) {}
+
+    if (!raw) {
+      try {
+        raw = String(sessionStorage.getItem(USER_GACHA_STORAGE_KEY) || "");
+      } catch (_err) {}
+    }
+
+    if (!raw) return normalizeGachaState(null);
+
+    try {
+      return normalizeGachaState(JSON.parse(raw));
+    } catch (_err) {
+      return normalizeGachaState(null);
     }
   }
 
@@ -717,6 +757,7 @@
     const form = document.querySelector('.zr-tukar-form[data-option="diamond"]');
     const tabButtons = document.querySelectorAll("[data-zr-diamond-game]");
     const packageGrid = document.getElementById("zrDiamondPackageGrid");
+    const board = document.querySelector(".zr-diamond-board");
     const gameField = document.querySelector('[name="diamondGame"]');
     const packageField = document.querySelector('[name="diamondPackage"]');
     const requiredCoinField = document.querySelector('[name="diamondRequiredCoin"]');
@@ -882,6 +923,12 @@
     function setGame(gameName) {
       const safeGame = DIAMOND_PACKAGES[gameName] ? gameName : "Mobile Legends";
       gameField.value = safeGame;
+      if (board && board.dataset) {
+        board.dataset.zrDiamondTheme =
+          safeGame === "Free Fire" ? "ff" :
+          safeGame === "Roblox" ? "roblox" :
+          "ml";
+      }
 
       tabButtons.forEach(function (button) {
         button.classList.toggle("is-active", String(button.dataset.zrDiamondGame || "") === safeGame);
@@ -1153,45 +1200,103 @@
   }
 
   function initRedeemGacha() {
+    const section = document.getElementById("zrGachaSection");
+    const title = document.getElementById("zrGachaTitle");
     const grid = document.querySelector("[data-zr-gacha-grid]");
     const notice = document.getElementById("zrGachaNotice");
     const spinBtn = document.getElementById("zrGachaSpinBtn");
-    const resetBtn = document.getElementById("zrGachaResetBtn");
-    if (!grid || !notice || !spinBtn) return;
+    const spinValue = document.getElementById("zrGachaSpinValue");
+    const redeemValue = document.getElementById("zrGachaRedeemValue");
+    if (!section || !grid || !notice || !spinBtn) return;
 
     const tiles = Array.from(grid.querySelectorAll(".zr-gacha-cell"));
-    let remainingRewards = GACHA_REWARDS.slice();
+    let gachaState = readStoredGachaState();
     let spinning = false;
 
-    function updateLoginStatus() {
-      const isLoggedIn = isUserLoggedIn();
-      
-      if (!isLoggedIn) {
-        spinBtn.disabled = true;
-        if (resetBtn) resetBtn.disabled = true;
-        notice.textContent = "Login Google dulu untuk mulai bermain Gacha 9 Hadiah.";
-        return;
-      }
-      
-      // User is logged in, update button states normally
-      if (!spinning && remainingRewards.length > 0) {
-        spinBtn.disabled = false;
+    function formatRewardLabel(reward) {
+      return formatCoinValue(reward && reward.coin);
+    }
+
+    function renderTileReward(tile, reward, index) {
+      const rewardCoin = Number(reward && reward.coin) || 0;
+      const rewardLabel = formatRewardLabel(reward);
+      tile.dataset.rewardCoin = String(rewardCoin);
+      tile.dataset.rewardLabel = rewardLabel;
+      tile.classList.remove("is-opened", "is-spinning");
+      tile.disabled = false;
+      tile.innerHTML = '<span class="zr-gacha-coin-icon">' + createNavIcon("coins") + "</span>" +
+        "<strong>" + rewardLabel + "</strong>";
+      tile.setAttribute("aria-label", "Bonus coin " + rewardLabel + " slot " + String(index + 1));
+    }
+
+    function getAvailableTiles() {
+      return tiles.filter(function (tile) {
+        return !tile.classList.contains("is-opened");
+      });
+    }
+
+    function updateSectionVisibility() {
+      section.hidden = !(isUserLoggedIn() && gachaState.totalRedeems > 0);
+    }
+
+    function renderGachaSummary() {
+      if (spinValue) spinValue.textContent = String(gachaState.availableSpins || 0) + "x";
+      if (redeemValue) redeemValue.textContent = String(gachaState.totalRedeems || 0) + "x";
+      if (title) {
+        title.textContent = gachaState.availableSpins > 0 ? "Bonus Spin Redeem" : "Bonus Redeem Kamu";
       }
     }
 
+    function resolveDefaultNotice() {
+      if (!isUserLoggedIn()) {
+        return "Login Google dulu sebelum membuka bonus spin redeem.";
+      }
+
+      if (gachaState.totalRedeems <= 0) {
+        return "Redeem kode valid dulu. Setiap 1 redeem berhasil memberi 1x spin bonus.";
+      }
+
+      if (!getAvailableTiles().length) {
+        return gachaState.availableSpins > 0
+          ? "Kamu masih punya " + gachaState.availableSpins + "x spin bonus. Tekan Gunakan Spin untuk putaran berikutnya."
+          : "Semua spin bonus sudah dipakai. Redeem kode lagi untuk dapat spin baru.";
+      }
+
+      if (gachaState.availableSpins <= 0) {
+        return "Spin bonus kamu habis. Redeem kode lagi untuk mendapat spin baru.";
+      }
+
+      return "Kamu punya " + gachaState.availableSpins + "x spin bonus dari redeem yang berhasil.";
+    }
+
+    function syncControls(customNotice) {
+      updateSectionVisibility();
+      renderGachaSummary();
+
+      if (spinning) {
+        spinBtn.disabled = true;
+        if (customNotice) notice.textContent = customNotice;
+        return;
+      }
+
+      if (!isUserLoggedIn() || gachaState.totalRedeems <= 0) {
+        spinBtn.disabled = true;
+        notice.textContent = customNotice || resolveDefaultNotice();
+        return;
+      }
+
+      spinBtn.disabled = gachaState.availableSpins <= 0;
+      notice.textContent = customNotice || resolveDefaultNotice();
+    }
+
     function resetBoard() {
-      remainingRewards = GACHA_REWARDS.slice();
+      const boardRewards = shuffleItems(GACHA_REWARDS).slice(0, tiles.length);
       spinning = false;
       tiles.forEach(function (tile, index) {
-        const label = tile.querySelector("strong");
-        tile.disabled = false;
-        tile.classList.remove("is-opened", "is-spinning");
-        if (label) label.textContent = "Hadiah Misteri";
-        tile.setAttribute("aria-label", "Kotak hadiah " + String(index + 1));
+        renderTileReward(tile, boardRewards[index] || { coin: 0 }, index);
       });
-      if (resetBtn) resetBtn.disabled = false;
-      updateLoginStatus();
-      notice.textContent = isUserLoggedIn() ? "Tekan tombol spin untuk mulai mengacak hadiah." : "Login Google dulu untuk mulai bermain Gacha 9 Hadiah.";
+      initIcons();
+      syncControls();
     }
 
     function clearSpinState() {
@@ -1200,40 +1305,76 @@
       });
     }
 
-    function finishSpin(targetTile, reward) {
-      const label = targetTile.querySelector("strong");
+    function finishSpin(targetTile, rewardLabel) {
       clearSpinState();
       targetTile.classList.add("is-opened");
       targetTile.disabled = true;
-      if (label) label.textContent = reward;
-      targetTile.setAttribute("aria-label", "Hadiah didapat: " + reward);
+      targetTile.setAttribute("aria-label", "Bonus coin didapat: " + rewardLabel);
 
       spinning = false;
-      spinBtn.disabled = remainingRewards.length === 0 || !isUserLoggedIn();
-      if (resetBtn) resetBtn.disabled = false;
-
-      if (!remainingRewards.length) {
-        notice.textContent = "Notifikasi hadiah: " + reward + ". Semua kotak sudah terbuka, tekan Acak Ulang untuk mulai lagi.";
-      } else {
-        notice.textContent = "Notifikasi hadiah: " + reward + ". Tekan spin lagi untuk buka kotak lainnya.";
-      }
-    }
-
-    function spinBoard() {
-      if (spinning) return;
-      if (!isUserLoggedIn()) {
-        notice.textContent = "Login Google dulu untuk mulai bermain Gacha 9 Hadiah.";
+      if (gachaState.availableSpins > 0) {
+        syncControls("Spin berhasil. Kamu dapat +" + rewardLabel + " dan coin langsung masuk ke akun. Spin bonus tersisa " + gachaState.availableSpins + "x.");
         return;
       }
 
-      const availableTiles = tiles.filter(function (tile) {
-        return !tile.classList.contains("is-opened");
-      });
-      if (!availableTiles.length || !remainingRewards.length) return;
+      syncControls("Spin berhasil. Kamu dapat +" + rewardLabel + " dan coin langsung masuk ke akun. Spin bonus habis, redeem kode lagi untuk lanjut.");
+    }
 
-      const rewardIndex = Math.floor(Math.random() * remainingRewards.length);
-      const reward = remainingRewards.splice(rewardIndex, 1)[0] || "Bonus Coin";
+    async function reserveSpin(rewardCoin) {
+      const authApi = window.ZerattoAuth && typeof window.ZerattoAuth.consumeGachaSpin === "function"
+        ? window.ZerattoAuth
+        : null;
+      if (!authApi) {
+        return {
+          ok: false,
+          state: gachaState,
+          message: "Sistem spin belum siap."
+        };
+      }
+      return authApi.consumeGachaSpin(rewardCoin);
+    }
+
+    async function spinBoard() {
+      if (spinning) return;
+
+      if (!isUserLoggedIn()) {
+        syncControls("Login Google dulu sebelum membuka bonus spin redeem.");
+        return;
+      }
+
+      if (gachaState.totalRedeems <= 0) {
+        syncControls("Redeem kode valid dulu. Setiap 1 redeem berhasil memberi 1x spin bonus.");
+        return;
+      }
+
+      if (gachaState.availableSpins <= 0) {
+        syncControls("Spin bonus kamu habis. Redeem kode lagi untuk mendapat spin baru.");
+        return;
+      }
+
+      if (!getAvailableTiles().length) {
+        resetBoard();
+      }
+
+      const availableTiles = getAvailableTiles();
+      if (!availableTiles.length) return;
+
       const targetTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
+      const rewardCoin = Number(targetTile.dataset.rewardCoin || 0);
+      const rewardLabel = String(targetTile.dataset.rewardLabel || formatCoinValue(rewardCoin));
+
+      spinBtn.disabled = true;
+      notice.textContent = "Memeriksa spin bonus...";
+
+      const consumeResult = await reserveSpin(rewardCoin);
+      gachaState = normalizeGachaState(consumeResult && consumeResult.state);
+      renderGachaSummary();
+
+      if (!consumeResult || !consumeResult.ok) {
+        syncControls(consumeResult && consumeResult.message ? consumeResult.message : "Spin belum tersedia.");
+        return;
+      }
+
       const sequence = availableTiles.slice();
       const steps = [];
       let step = 0;
@@ -1246,7 +1387,6 @@
         return pool[Math.floor(Math.random() * pool.length)];
       }
 
-      // Gerakan dibuat acak supaya highlight tidak selalu berurutan.
       const randomMoves = Math.max(8, sequence.length * 2) + Math.floor(Math.random() * 6);
       let lastTile = null;
 
@@ -1257,14 +1397,11 @@
       }
 
       if (lastTile === targetTile && sequence.length > 1) {
-        const extraTile = pickRandomTile(targetTile);
-        steps.push(extraTile);
+        steps.push(pickRandomTile(targetTile));
       }
       steps.push(targetTile);
 
       spinning = true;
-      spinBtn.disabled = true;
-      if (resetBtn) resetBtn.disabled = true;
       notice.textContent = "Spin berjalan...";
 
       function tick() {
@@ -1274,7 +1411,7 @@
 
         if (step >= steps.length - 1) {
           window.setTimeout(function () {
-            finishSpin(targetTile, reward);
+            finishSpin(targetTile, rewardLabel);
           }, 120);
           return;
         }
@@ -1288,26 +1425,36 @@
       tick();
     }
 
-    if (spinBtn) {
-      spinBtn.addEventListener("click", spinBoard);
+    spinBtn.addEventListener("click", function () {
+      spinBoard().catch(function () {
+        syncControls("Spin gagal dijalankan. Coba lagi.");
+      });
+    });
+
+    function syncStateFromStorage(customNotice) {
+      gachaState = readStoredGachaState();
+      syncControls(customNotice);
     }
 
-    if (resetBtn) {
-      resetBtn.addEventListener("click", resetBoard);
-    }
-
-    // Listen for login/logout events
     window.addEventListener("storage", function (event) {
-      if (!event || event.key !== "googleUser") return;
-      updateLoginStatus();
+      if (!event) return;
+      if (event.key === "googleUser" || event.key === USER_GACHA_STORAGE_KEY) {
+        syncStateFromStorage();
+      }
+    });
+
+    window.addEventListener(USER_GACHA_EVENT, function (event) {
+      gachaState = normalizeGachaState(event && event.detail);
+      syncControls();
     });
 
     window.addEventListener("userLoggedIn", function () {
-      updateLoginStatus();
+      syncStateFromStorage();
     });
 
     window.addEventListener("userLoggedOut", function () {
-      updateLoginStatus();
+      gachaState = normalizeGachaState(null);
+      resetBoard();
     });
 
     resetBoard();
