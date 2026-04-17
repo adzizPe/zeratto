@@ -1220,21 +1220,23 @@
 
   function initRedeemGacha() {
     const section = document.getElementById("zrGachaSection");
-    const title = document.getElementById("zrGachaTitle");
-    const grid = document.querySelector("[data-zr-gacha-grid]");
+    const wheelContainer = document.querySelector("[data-zr-gacha-grid]");
+    const wheelCircle = wheelContainer ? wheelContainer.querySelector(".zr-wheel-circle") : null;
     const notice = document.getElementById("zrGachaNotice");
     const spinBtn = document.getElementById("zrGachaSpinBtn");
     const spinValue = document.getElementById("zrGachaSpinValue");
     const redeemValue = document.getElementById("zrGachaRedeemValue");
     const popup = document.getElementById("zrLuckyPopup");
     const popupValue = document.getElementById("zrLuckyPopupValue");
-    if (!section || !grid || !notice || !spinBtn) return;
+    if (!section || !wheelContainer || !wheelCircle || !notice || !spinBtn) return;
 
-    const tiles = Array.from(grid.querySelectorAll(".zr-gacha-cell"));
+    const wheelColors = ["#db7093", "#20b2aa", "#d63e92", "#daa520", "#ff34f0", "#ff7f50", "#3cb371", "#4169e1"];
+    let currentRewards = [];
     let gachaState = readStoredGachaState();
     let spinning = false;
     let previewRequestId = 0;
     let popupTimer = 0;
+    let wheelRotation = 0;
 
     function getAuthApi() {
       return window.ZerattoAuth && typeof window.ZerattoAuth.spinLuckyDraw === "function"
@@ -1242,24 +1244,29 @@
         : null;
     }
 
-    function renderTileReward(tile, rewardCoin, index) {
-      const safeRewardCoin = Number.isFinite(Number(rewardCoin)) ? Math.max(0, Math.trunc(Number(rewardCoin))) : 0;
-      const rewardLabel = formatCoinValue(safeRewardCoin);
-      tile.dataset.rewardCoin = String(safeRewardCoin);
-      tile.dataset.rewardLabel = rewardLabel;
-      tile.classList.remove("is-winner", "is-spinning");
-      tile.disabled = false;
-      tile.innerHTML = '<span class="zr-gacha-coin-icon">' + createNavIcon("coins") + "</span>" +
-        "<strong>" + rewardLabel + "</strong>";
-      tile.setAttribute("aria-label", "Lucky draw " + rewardLabel + " slot " + String(index + 1));
+    function createWheelSections(rewards) {
+      const board = normalizeLuckyBoardRewards(rewards);
+      currentRewards = board;
+      wheelCircle.innerHTML = "";
+      
+      board.forEach(function (reward, index) {
+        const section = document.createElement("div");
+        section.className = "zr-wheel-number";
+        section.style.setProperty("--i", index + 1);
+        section.style.setProperty("--clr", wheelColors[index % wheelColors.length]);
+        
+        const span = document.createElement("span");
+        span.textContent = String(Math.max(0, Math.trunc(Number(reward) || 0)));
+        section.appendChild(span);
+        
+        wheelCircle.appendChild(section);
+      });
+      
+      initIcons();
     }
 
     function applyBoardRewards(rewards) {
-      const board = normalizeLuckyBoardRewards(rewards);
-      tiles.forEach(function (tile, index) {
-        renderTileReward(tile, board[index], index);
-      });
-      initIcons();
+      createWheelSections(rewards);
     }
 
     function updateSectionVisibility() {
@@ -1269,7 +1276,6 @@
     function renderGachaSummary() {
       if (spinValue) spinValue.textContent = String(gachaState.availableSpins || 0) + "x";
       if (redeemValue) redeemValue.textContent = String(gachaState.totalRedeems || 0) + "x";
-      if (title) title.textContent = "Lucky Draw";
     }
 
     function resolveDefaultNotice() {
@@ -1292,26 +1298,8 @@
       updateSectionVisibility();
       renderGachaSummary();
 
-      if (spinning) {
-        spinBtn.disabled = true;
-        if (customNotice) notice.textContent = customNotice;
-        return;
-      }
-
-      spinBtn.disabled = !(isUserLoggedIn() && gachaState.availableSpins > 0);
+      spinBtn.disabled = spinning || !isUserLoggedIn() || gachaState.availableSpins <= 0;
       notice.textContent = customNotice || resolveDefaultNotice();
-    }
-
-    function clearSpinState() {
-      tiles.forEach(function (tile) {
-        tile.classList.remove("is-spinning");
-      });
-    }
-
-    function clearWinnerState() {
-      tiles.forEach(function (tile) {
-        tile.classList.remove("is-winner");
-      });
     }
 
     function hideLuckyPopup(immediate) {
@@ -1330,7 +1318,7 @@
       window.setTimeout(function () {
         popup.hidden = true;
         popup.classList.remove("is-leaving");
-      }, 180);
+      }, 200);
     }
 
     function showLuckyPopup(rewardLabel) {
@@ -1346,74 +1334,50 @@
       initIcons();
       popupTimer = window.setTimeout(function () {
         hideLuckyPopup(false);
-      }, 1700);
+      }, 2000);
     }
 
-    async function loadBoardPreview() {
-      const authApi = getAuthApi();
-      const requestId = ++previewRequestId;
-
-      if (!isUserLoggedIn() || !authApi || typeof authApi.getLuckyDrawPreview !== "function") {
-        applyBoardRewards(GACHA_REWARDS);
-        return;
-      }
-
+    function playSpinSound() {
       try {
-        const preview = await authApi.getLuckyDrawPreview();
-        if (requestId !== previewRequestId) return;
-        applyBoardRewards(preview && preview.boardRewards);
-      } catch (_err) {
-        if (requestId !== previewRequestId) return;
-        applyBoardRewards(GACHA_REWARDS);
-      }
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
+        
+        gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+      } catch (_err) {}
     }
 
-    function finishSpin(targetIndex, rewardLabel) {
-      const targetTile = tiles[targetIndex];
-      clearSpinState();
-      clearWinnerState();
-      if (targetTile) {
-        targetTile.classList.add("is-winner");
-        targetTile.setAttribute("aria-label", "Hasil lucky draw " + rewardLabel);
-      }
-
-      spinning = false;
-      showLuckyPopup(rewardLabel);
-      
-      if (popup) {
-        generateConfetti(popup);
-      }
-
-      syncControls(gachaState.availableSpins > 0 ? "Spin " + gachaState.availableSpins + "x" : "Spin habis");
-    }
-
-    function buildSpinSteps(targetIndex) {
-      const steps = [];
-      let lastIndex = -1;
-      const baseSteps = 18 + Math.floor(Math.random() * 14);
-      const randomness = Math.random();
-
-      for (let index = 0; index < baseSteps; index += 1) {
-        let nextIndex = Math.floor(Math.random() * tiles.length);
-        if (tiles.length > 1) {
-          while (nextIndex === lastIndex) {
-            nextIndex = Math.floor(Math.random() * tiles.length);
-          }
-        }
-        steps.push(nextIndex);
-        lastIndex = nextIndex;
-      }
-
-      if (lastIndex === targetIndex && tiles.length > 1) {
-        let bridgeIndex = Math.floor(Math.random() * tiles.length);
-        while (bridgeIndex === targetIndex) {
-          bridgeIndex = Math.floor(Math.random() * tiles.length);
-        }
-        steps.push(bridgeIndex);
-      }
-
-      steps.push(targetIndex);
-      return steps;
+    function playWinSound() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [800, 1000, 1200];
+        const noteLength = 0.1;
+        
+        notes.forEach(function (freq, i) {
+          const osc = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          osc.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * noteLength);
+          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + i * noteLength);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * noteLength + noteLength);
+          
+          osc.start(audioContext.currentTime + i * noteLength);
+          osc.stop(audioContext.currentTime + i * noteLength + noteLength);
+        });
+      } catch (_err) {}
     }
 
     function generateConfetti(container) {
@@ -1453,6 +1417,25 @@
       }
     }
 
+    async function loadBoardPreview() {
+      const authApi = getAuthApi();
+      const requestId = ++previewRequestId;
+
+      if (!isUserLoggedIn() || !authApi || typeof authApi.getLuckyDrawPreview !== "function") {
+        applyBoardRewards(GACHA_REWARDS);
+        return;
+      }
+
+      try {
+        const preview = await authApi.getLuckyDrawPreview();
+        if (requestId !== previewRequestId) return;
+        applyBoardRewards(preview && preview.boardRewards);
+      } catch (_err) {
+        if (requestId !== previewRequestId) return;
+        applyBoardRewards(GACHA_REWARDS);
+      }
+    }
+
     async function reserveSpin() {
       const authApi = getAuthApi();
       if (!authApi) {
@@ -1465,7 +1448,20 @@
       return authApi.spinLuckyDraw();
     }
 
-    async function spinBoard() {
+    function finishSpin(targetIndex, rewardLabel, rewardCoin) {
+      spinning = false;
+      wheelCircle.style.transition = "none";
+      playWinSound();
+      showLuckyPopup(rewardLabel);
+      
+      if (popup) {
+        generateConfetti(popup);
+      }
+
+      syncControls(gachaState.availableSpins > 0 ? "Spin " + gachaState.availableSpins + "x" : "Spin habis");
+    }
+
+    async function spinWheel() {
       if (spinning) return;
 
       if (!isUserLoggedIn()) {
@@ -1483,53 +1479,43 @@
         return;
       }
 
+      spinning = true;
       spinBtn.disabled = true;
       notice.textContent = "Memutar...";
       hideLuckyPopup(true);
-      clearSpinState();
-      clearWinnerState();
+      playSpinSound();
 
       const consumeResult = await reserveSpin();
       gachaState = normalizeGachaState(consumeResult && consumeResult.state);
       renderGachaSummary();
 
       if (!consumeResult || !consumeResult.ok) {
+        spinning = false;
         syncControls(consumeResult && consumeResult.message ? consumeResult.message : "Lucky draw belum tersedia.");
         return;
       }
 
       applyBoardRewards(consumeResult.boardRewards);
-      const targetIndex = Math.max(0, Math.min(tiles.length - 1, Math.trunc(Number(consumeResult.winningIndex) || 0)));
+      const targetIndex = Math.max(0, Math.min(currentRewards.length - 1, Math.trunc(Number(consumeResult.winningIndex) || 0)));
       const rewardLabel = formatCoinValue(consumeResult.rewardCoin);
-      const steps = buildSpinSteps(targetIndex);
-      let step = 0;
 
-      spinning = true;
-      notice.textContent = "Berjalan...";
+      const spinsNeeded = 5 + Math.floor(Math.random() * 3);
+      const degreesPerSection = 360 / currentRewards.length;
+      const randomExtraSpin = Math.floor(Math.random() * 360);
+      const targetDegrees = (targetIndex * degreesPerSection) + randomExtraSpin + (spinsNeeded * 360);
+      
+      wheelRotation += targetDegrees;
+      wheelCircle.style.transition = "transform 5.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+      wheelCircle.style.transform = "rotate(" + wheelRotation + "deg)";
 
-      function tick() {
-        clearSpinState();
-        const activeTile = tiles[steps[step]];
-        if (activeTile) activeTile.classList.add("is-spinning");
-
-        if (step >= steps.length - 1) {
-          window.setTimeout(function () {
-            finishSpin(targetIndex, rewardLabel);
-          }, 120);
-          return;
-        }
-
-        step += 1;
-        const remainingSteps = (steps.length - 1) - step;
-        const delay = remainingSteps < 3 ? 180 : (remainingSteps < 6 ? 130 : 80);
-        window.setTimeout(tick, delay);
-      }
-
-      tick();
+      window.setTimeout(function () {
+        finishSpin(targetIndex, rewardLabel, consumeResult.rewardCoin);
+      }, 5500);
     }
 
     spinBtn.addEventListener("click", function () {
-      spinBoard().catch(function () {
+      spinWheel().catch(function () {
+        spinning = false;
         syncControls("Spin gagal dijalankan. Coba lagi.");
       });
     });

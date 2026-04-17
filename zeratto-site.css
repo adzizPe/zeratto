@@ -1976,6 +1976,143 @@ body.zr-site-shell::after,
   animation: zrConfettiFall linear forwards;
 }
 
+/* Spin Wheel Styles */
+.zr-gacha-machine-wheel {
+  flex-direction: column;
+  gap: 30px;
+}
+
+.zr-spin-wheel-container {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.zr-spin-wheel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 8px rgba(48, 30, 20, 0.3),
+    0 0 0 12px #fff7ef,
+    0 0 40px rgba(255, 165, 100, 0.25);
+  background: #333;
+}
+
+.zr-wheel-circle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #333;
+  transition: transform 5.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: center;
+}
+
+.zr-wheel-pointer {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 20px solid #ffc857;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.zr-wheel-number {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  background: var(--clr);
+  transform-origin: bottom right;
+  transform: rotate(calc(45deg * var(--i)));
+  clip-path: polygon(0 0, 56% 0, 100% 100%, 0 56%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+
+.zr-wheel-number span {
+  position: relative;
+  transform: rotate(45deg);
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 3px 5px 2px rgba(0, 0, 0, 0.2);
+  font-family: "Bricolage Grotesque", sans-serif;
+}
+
+.zr-wheel-number span::after {
+  content: " Coin";
+  position: absolute;
+  font-size: 0.5em;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.zr-spin-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #ffc857 0%, #ff9153 100%);
+  border-radius: 50%;
+  border: 4px solid #fff;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  user-select: none;
+  box-shadow:
+    0 0 20px rgba(255, 165, 100, 0.5),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.zr-spin-btn:hover:not(:disabled) {
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow:
+    0 0 30px rgba(255, 165, 100, 0.7),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.2);
+}
+
+.zr-spin-btn:active:not(:disabled) {
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+.zr-spin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.zr-gacha-control-panel-wheel {
+  text-align: center;
+}
+
+@keyframes zrWheelSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .zr-tukar-menu-card--dark {
   border: none;
   background: rgba(255, 255, 255, 0.95);

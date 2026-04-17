@@ -78,24 +78,20 @@
       <div class="zr-shell-card zr-gacha-card">
         <div class="zr-gacha-head">
           <div>
-            <h3 id="zrGachaTitle">Lucky Draw</h3>
+            <h3 id="zrGachaTitle">Lucky Draw Spin</h3>
           </div>
         </div>
-        <div class="zr-gacha-machine">
-          <div class="zr-gacha-board-wrap">
-            <div class="zr-gacha-grid zr-gacha-grid--compact" data-zr-gacha-grid>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="1" aria-label="Lucky draw slot 1"></button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="2" aria-label="Lucky draw slot 2"></button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="3" aria-label="Lucky draw slot 3"></button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="4" aria-label="Lucky draw slot 4"></button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="5" aria-label="Lucky draw slot 5"></button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="6" aria-label="Lucky draw slot 6"></button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="7" aria-label="Lucky draw slot 7"></button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="8" aria-label="Lucky draw slot 8"></button>
-              <button class="zr-gacha-tile zr-gacha-cell" type="button" data-slot="9" aria-label="Lucky draw slot 9"></button>
+        <div class="zr-gacha-machine zr-gacha-machine-wheel">
+          <div class="zr-spin-wheel-container">
+            <button type="button" class="zr-spin-btn" id="zrGachaSpinBtn" aria-label="Putar spin wheel">
+              <span>SPIN</span>
+            </button>
+            <div class="zr-spin-wheel" id="zrSpinWheel" data-zr-gacha-grid>
+              <div class="zr-wheel-pointer"></div>
+              <div class="zr-wheel-circle"></div>
             </div>
           </div>
-          <div class="zr-gacha-control-panel">
+          <div class="zr-gacha-control-panel zr-gacha-control-panel-wheel">
             <div class="zr-gacha-stats">
               <div class="zr-gacha-stat">
                 <span>Spin</span>
@@ -107,9 +103,6 @@
               </div>
             </div>
             <div id="zrGachaNotice" class="zr-gacha-notice" aria-live="polite">1 redeem = 1 spin</div>
-            <div class="zr-gacha-actions">
-              <button id="zrGachaSpinBtn" class="zr-btn primary" type="button">Putar</button>
-            </div>
           </div>
         </div>
       </div>
