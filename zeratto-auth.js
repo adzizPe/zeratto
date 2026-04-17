@@ -32,7 +32,7 @@
   const EWALLET_TYPES = ["DANA", "GoPay", "OVO", "ShopeePay"];
   const PULSA_OPERATORS = ["Telkomsel", "Axis", "XL", "Tri", "IM3", "Smartfren"];
   const DEFAULT_GACHA_REWARD_VALUES = [5, 8, 10, 12, 15, 18, 20, 25, 30];
-  const GACHA_BOARD_SIZE = 9;
+  const GACHA_BOARD_SIZE = 8;
 
   const TUKAR_LABELS = {
     diamond: "Diamond Game",

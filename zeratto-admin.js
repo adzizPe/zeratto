@@ -482,7 +482,7 @@
         name: String(row.name || "Pengguna Zeratto"),
         email: String(row.email || "-"),
         rewardCoin: toInt(row.rewardCoin, 0),
-        boardRewards: normalizeRewardList(row.boardRewards, DEFAULT_GACHA_REWARD_VALUES, 9),
+        boardRewards: normalizeRewardList(row.boardRewards, DEFAULT_GACHA_REWARD_VALUES, 8),
         winningIndex: toInt(row.winningIndex, 0),
         source: String(row.source || "random"),
         remainingSpins: toInt(row.remainingSpins, 0),

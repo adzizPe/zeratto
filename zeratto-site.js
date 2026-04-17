@@ -268,7 +268,7 @@
     const pool = normalized.length ? normalized : GACHA_REWARDS.slice();
     const board = [];
 
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 8; index += 1) {
       board.push(pool[index % pool.length]);
     }
 
@@ -1558,9 +1558,9 @@
     }
 
     window.addEventListener("redeemSuccess", function (event) {
-      if (!section || section.hidden) return;
       scrollToLuckyDraw();
       gachaState = readStoredGachaState();
+      updateSectionVisibility();
       syncControls();
       loadBoardPreview().catch(function () {});
     });
