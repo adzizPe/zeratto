@@ -30,12 +30,15 @@
   const PATH_EXCHANGE = "zerattoExchangeRequests";
   const PATH_EXCHANGE_BY_USER = "zerattoExchangeByUser";
   const PATH_CODE_REPORTS = "zerattoCodeReports";
+  const PATH_GACHA_CONFIG = "zerattoLuckyDrawConfig";
+  const PATH_GACHA_LOGS = "zerattoLuckyDrawSpinLogs";
   const PAGE_NAMES = ["dashboard", "exchange", "users", "codes", "redeems"];
   const REDEEM_VALUE_RP = 10;
   const EWALLET_MIN_COIN = 100;
   const EWALLET_RUPIAH_PER_COIN = 10;
   const AUTO_GENERATE_CODE_TOTAL = 2000;
   const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const DEFAULT_GACHA_REWARD_VALUES = [5, 8, 10, 12, 15, 18, 20, 25, 30];
 
   let adminDb = null;
   let loading = false;
@@ -46,13 +49,17 @@
     codesMap: {},
     exchangesMap: {},
     redeemsMap: {},
+    gachaConfigMap: {},
+    gachaLogsMap: {},
     exchangeFilter: "pending",
     exchangeSearch: "",
     userSearch: "",
     codeFilter: "all",
     codeSearch: "",
     redeemSearch: "",
+    luckySpinSearch: "",
     recapDate: "",
+    selectedLuckyUid: "",
     currentPage: "dashboard"
   };
 
@@ -195,6 +202,45 @@
 
   function codeKey(code) {
     return normalizeCode(code).replace(/[.#$/[\]]/g, "_");
+  }
+
+  function normalizeRewardList(raw, fallbackList, maxItems) {
+    const hasExplicitFallback = Array.isArray(fallbackList);
+    const fallback = hasExplicitFallback ? fallbackList.slice() : DEFAULT_GACHA_REWARD_VALUES.slice();
+    const limit = Math.max(1, toInt(maxItems, fallback.length || DEFAULT_GACHA_REWARD_VALUES.length));
+    let items = [];
+
+    if (Array.isArray(raw)) {
+      items = raw.slice();
+    } else if (typeof raw === "string") {
+      items = raw.split(/[\s,|]+/);
+    }
+
+    items = items
+      .map(function (value) { return toInt(value, 0); })
+      .filter(function (value) { return value > 0; });
+
+    if (!items.length) {
+      items = fallback.slice();
+    }
+
+    if (!items.length) return [];
+
+    return items.slice(0, limit);
+  }
+
+  function parseRewardInput(text) {
+    return normalizeRewardList(String(text || ""), [], 200).filter(function (value) {
+      return value > 0;
+    });
+  }
+
+  function formatRewardList(values) {
+    return normalizeRewardList(values, DEFAULT_GACHA_REWARD_VALUES, 200).join(", ");
+  }
+
+  function userConfigKey(uid) {
+    return String(uid || "").trim().replace(/[.#$/[\]]/g, "_");
   }
 
   function randomCode(length) {
@@ -398,6 +444,62 @@
     }).sort(function (a, b) {
       return b.lastLoginAt - a.lastLoginAt;
     });
+  }
+
+  function getDefaultLuckyRewards() {
+    const defaults = state.gachaConfigMap && state.gachaConfigMap.defaults && typeof state.gachaConfigMap.defaults === "object"
+      ? state.gachaConfigMap.defaults
+      : {};
+    return normalizeRewardList(defaults.rewards, DEFAULT_GACHA_REWARD_VALUES, 200);
+  }
+
+  function getLuckyUserConfig(uid) {
+    const users = state.gachaConfigMap && state.gachaConfigMap.users && typeof state.gachaConfigMap.users === "object"
+      ? state.gachaConfigMap.users
+      : {};
+    const key = userConfigKey(uid);
+    const row = users[key] && typeof users[key] === "object" ? users[key] : {};
+    const rewardsRaw = Array.isArray(row.rewards) ? row.rewards : [];
+    const queueRaw = Array.isArray(row.forcedQueue) ? row.forcedQueue : [];
+    return {
+      rewardsRaw: rewardsRaw,
+      forcedQueueRaw: queueRaw,
+      rewards: normalizeRewardList(rewardsRaw, getDefaultLuckyRewards(), 200),
+      forcedQueue: normalizeRewardList(queueRaw, [], 200),
+      hasCustomRewards: rewardsRaw.length > 0,
+      hasForcedQueue: queueRaw.length > 0,
+      updatedAt: parseTimestamp(row.updatedAt),
+      updatedBy: String(row.updatedBy || "")
+    };
+  }
+
+  function luckySpinData() {
+    return entriesSafe(state.gachaLogsMap).map(function (entry) {
+      const row = entry[1] && typeof entry[1] === "object" ? entry[1] : {};
+      return {
+        id: entry[0],
+        uid: String(row.uid || ""),
+        name: String(row.name || "Pengguna Zeratto"),
+        email: String(row.email || "-"),
+        rewardCoin: toInt(row.rewardCoin, 0),
+        boardRewards: normalizeRewardList(row.boardRewards, DEFAULT_GACHA_REWARD_VALUES, 9),
+        winningIndex: toInt(row.winningIndex, 0),
+        source: String(row.source || "random"),
+        remainingSpins: toInt(row.remainingSpins, 0),
+        totalRedeems: toInt(row.totalRedeems, 0),
+        pointsAfter: toInt(row.pointsAfter, 0),
+        spinAt: parseTimestamp(row.spinAt)
+      };
+    }).sort(function (a, b) {
+      return b.spinAt - a.spinAt;
+    });
+  }
+
+  function getLuckySpinCount(uid) {
+    const safeUid = String(uid || "");
+    return luckySpinData().filter(function (row) {
+      return row.uid === safeUid;
+    }).length;
   }
 
   function codesData() {
@@ -621,7 +723,14 @@
       return;
     }
 
+    const luckySpinCounts = {};
+    luckySpinData().forEach(function (row) {
+      luckySpinCounts[row.uid] = toInt(luckySpinCounts[row.uid], 0) + 1;
+    });
+
     container.innerHTML = rows.map(function (row) {
+      const luckyConfig = getLuckyUserConfig(row.uid);
+      const luckySpinCount = toInt(luckySpinCounts[row.uid], 0);
       return [
         "<article class=\"za-item\">",
         "<div class=\"za-item-top\">",
@@ -632,16 +741,52 @@
         "<div class=\"za-meta\"><label>UID</label><span>", escapeHtml(row.uid), "</span></div>",
         "<div class=\"za-meta\"><label>Last Login</label><span>", escapeHtml(formatDateTime(row.lastLoginAt)), "</span></div>",
         "<div class=\"za-meta\"><label>Coin Saat Ini</label><span>", escapeHtml(formatRupiah(row.points)), "</span></div>",
+        "<div class=\"za-meta\"><label>Lucky Draw</label><span>", escapeHtml(luckyConfig.hasCustomRewards ? "Custom" : "Default"), " | Spin ", escapeHtml(String(luckySpinCount)), "x</span></div>",
         "</div>",
         "<div class=\"za-user-points\">",
         "<input type=\"number\" min=\"0\" step=\"1\" value=\"100\" class=\"za-point-input\" title=\"Jumlah coin\">",
         "<button type=\"button\" data-user-action=\"add\" data-uid=\"", escapeHtml(row.uid), "\">+ Coin</button>",
         "<button type=\"button\" data-user-action=\"sub\" data-uid=\"", escapeHtml(row.uid), "\" class=\"danger\">- Coin</button>",
         "<button type=\"button\" data-user-action=\"set\" data-uid=\"", escapeHtml(row.uid), "\" class=\"neutral\">Set Coin</button>",
+        "<button type=\"button\" data-user-action=\"lucky\" data-uid=\"", escapeHtml(row.uid), "\" class=\"neutral\">Atur Lucky</button>",
         "</div>",
         "</article>"
       ].join("");
     }).join("");
+  }
+
+  function renderLuckyConfigPanel() {
+    const defaultInput = byId("zaLuckyDefaultRewards");
+    const defaultPreview = byId("zaLuckyDefaultPreview");
+    const emptyEl = byId("zaLuckyUserEmpty");
+    const editor = byId("zaLuckyUserEditor");
+    const nameEl = byId("zaLuckyUserName");
+    const metaEl = byId("zaLuckyUserMeta");
+    const rewardsInput = byId("zaLuckyUserRewards");
+    const queueInput = byId("zaLuckyUserQueue");
+    if (!defaultInput || !defaultPreview || !emptyEl || !editor || !nameEl || !metaEl || !rewardsInput || !queueInput) return;
+
+    const defaultRewards = getDefaultLuckyRewards();
+    defaultInput.value = formatRewardList(defaultRewards);
+    defaultPreview.textContent = formatRewardList(defaultRewards);
+
+    const selectedUid = String(state.selectedLuckyUid || "");
+    if (!selectedUid || !state.usersMap[selectedUid]) {
+      emptyEl.hidden = false;
+      editor.hidden = true;
+      return;
+    }
+
+    const userRow = state.usersMap[selectedUid] && typeof state.usersMap[selectedUid] === "object" ? state.usersMap[selectedUid] : {};
+    const config = getLuckyUserConfig(selectedUid);
+
+    nameEl.textContent = String(userRow.name || "Pengguna Zeratto");
+    metaEl.textContent = selectedUid + " | " + String(userRow.email || "-");
+    rewardsInput.value = config.hasCustomRewards ? config.rewardsRaw.join(", ") : "";
+    queueInput.value = config.hasForcedQueue ? config.forcedQueueRaw.join(", ") : "";
+
+    emptyEl.hidden = true;
+    editor.hidden = false;
   }
 
   function renderCodes() {
@@ -980,13 +1125,59 @@
     }).join("");
   }
 
+  function renderLuckySpins() {
+    const container = byId("zaLuckySpinHistory");
+    if (!container) return;
+
+    let rows = luckySpinData();
+    const search = String(state.luckySpinSearch || "").toLowerCase();
+    if (search) {
+      rows = rows.filter(function (row) {
+        return (
+          row.uid.toLowerCase().includes(search) ||
+          row.name.toLowerCase().includes(search) ||
+          row.email.toLowerCase().includes(search) ||
+          String(row.rewardCoin).toLowerCase().includes(search) ||
+          row.source.toLowerCase().includes(search)
+        );
+      });
+    }
+
+    if (!rows.length) {
+      container.innerHTML = "<div class=\"za-empty\">Belum ada data lucky draw user.</div>";
+      return;
+    }
+
+    container.innerHTML = rows.map(function (row) {
+      return [
+        "<article class=\"za-item\">",
+        "<div class=\"za-item-top\">",
+        "<div class=\"za-item-title\"><strong>", escapeHtml(row.name), "</strong><span>", escapeHtml(row.email), "</span></div>",
+        "<div class=\"za-badge active\">", escapeHtml(formatRupiah(row.rewardCoin)), "</div>",
+        "</div>",
+        "<div class=\"za-item-grid\">",
+        "<div class=\"za-meta\"><label>UID</label><span>", escapeHtml(row.uid), "</span></div>",
+        "<div class=\"za-meta\"><label>Waktu Spin</label><span>", escapeHtml(formatDateTime(row.spinAt)), "</span></div>",
+        "<div class=\"za-meta\"><label>Sumber</label><span>", escapeHtml(row.source), "</span></div>",
+        "<div class=\"za-meta\"><label>Spin Sisa</label><span>", escapeHtml(String(row.remainingSpins)), "x</span></div>",
+        "<div class=\"za-meta\"><label>Total Redeem</label><span>", escapeHtml(String(row.totalRedeems)), "x</span></div>",
+        "<div class=\"za-meta\"><label>Coin Setelah Spin</label><span>", escapeHtml(formatRupiah(row.pointsAfter)), "</span></div>",
+        "</div>",
+        "<div class=\"za-detail\"><div class=\"za-detail-row\"><span>Board</span><span>", escapeHtml(row.boardRewards.join(" | ")), "</span></div></div>",
+        "</article>"
+      ].join("");
+    }).join("");
+  }
+
   function renderAll() {
     renderStats();
     renderExchanges();
     renderUsers();
+    renderLuckyConfigPanel();
     renderCodes();
     renderCodeRecap();
     renderRedeems();
+    renderLuckySpins();
   }
 
   function setToolbarLoading(disabled) {
@@ -1015,12 +1206,16 @@
         adminDb.ref(PATH_USERS).once("value"),
         adminDb.ref(PATH_CODES).once("value"),
         adminDb.ref(PATH_EXCHANGE).once("value"),
-        adminDb.ref(PATH_REDEEMS).once("value")
+        adminDb.ref(PATH_REDEEMS).once("value"),
+        adminDb.ref(PATH_GACHA_CONFIG).once("value"),
+        adminDb.ref(PATH_GACHA_LOGS).once("value")
       ]);
       state.usersMap = snaps[0].val() || {};
       state.codesMap = snaps[1].val() || {};
       state.exchangesMap = snaps[2].val() || {};
       state.redeemsMap = snaps[3].val() || {};
+      state.gachaConfigMap = snaps[4].val() || {};
+      state.gachaLogsMap = snaps[5].val() || {};
       renderAll();
       showToast("Data admin Zeratto berhasil dimuat.", "success");
     } catch (err) {
@@ -1195,6 +1390,83 @@
     showToast("Kode berhasil dihapus.", "success");
   }
 
+  async function saveLuckyDefaultConfig() {
+    const input = byId("zaLuckyDefaultRewards");
+    const rewards = parseRewardInput(input ? input.value : "");
+    if (!rewards.length) {
+      showToast("Masukkan hadiah default yang valid.", "error");
+      return;
+    }
+
+    const payload = {
+      rewards: rewards,
+      updatedAt: Date.now(),
+      updatedBy: "admin"
+    };
+
+    await adminDb.ref(PATH_GACHA_CONFIG + "/defaults").set(payload);
+    state.gachaConfigMap = state.gachaConfigMap && typeof state.gachaConfigMap === "object" ? state.gachaConfigMap : {};
+    state.gachaConfigMap.defaults = payload;
+    renderLuckyConfigPanel();
+    showToast("Hadiah default lucky draw berhasil disimpan.", "success");
+  }
+
+  async function saveLuckyUserConfig() {
+    const uid = String(state.selectedLuckyUid || "");
+    if (!uid) {
+      showToast("Pilih user dulu.", "error");
+      return;
+    }
+
+    const rewardsInput = byId("zaLuckyUserRewards");
+    const queueInput = byId("zaLuckyUserQueue");
+    const rewards = parseRewardInput(rewardsInput ? rewardsInput.value : "");
+    const queue = parseRewardInput(queueInput ? queueInput.value : "");
+    const key = userConfigKey(uid);
+
+    if (!rewards.length && !queue.length) {
+      await adminDb.ref(PATH_GACHA_CONFIG + "/users/" + key).remove();
+      if (state.gachaConfigMap.users && state.gachaConfigMap.users[key]) {
+        delete state.gachaConfigMap.users[key];
+      }
+      renderUsers();
+      renderLuckyConfigPanel();
+      showToast("Setting user direset ke default.", "success");
+      return;
+    }
+
+    const payload = {
+      updatedAt: Date.now(),
+      updatedBy: "admin"
+    };
+    if (rewards.length) payload.rewards = rewards;
+    if (queue.length) payload.forcedQueue = queue;
+
+    await adminDb.ref(PATH_GACHA_CONFIG + "/users/" + key).set(payload);
+    state.gachaConfigMap = state.gachaConfigMap && typeof state.gachaConfigMap === "object" ? state.gachaConfigMap : {};
+    state.gachaConfigMap.users = state.gachaConfigMap.users && typeof state.gachaConfigMap.users === "object" ? state.gachaConfigMap.users : {};
+    state.gachaConfigMap.users[key] = payload;
+    renderUsers();
+    renderLuckyConfigPanel();
+    showToast("Setting lucky draw user berhasil disimpan.", "success");
+  }
+
+  async function resetLuckyUserConfig() {
+    const uid = String(state.selectedLuckyUid || "");
+    if (!uid) {
+      showToast("Pilih user dulu.", "error");
+      return;
+    }
+    const key = userConfigKey(uid);
+    await adminDb.ref(PATH_GACHA_CONFIG + "/users/" + key).remove();
+    if (state.gachaConfigMap.users && state.gachaConfigMap.users[key]) {
+      delete state.gachaConfigMap.users[key];
+    }
+    renderUsers();
+    renderLuckyConfigPanel();
+    showToast("Setting lucky draw user berhasil dihapus.", "success");
+  }
+
   async function handleLogin(event) {
     event.preventDefault();
     const username = String(byId("zaUsername").value || "").trim();
@@ -1323,6 +1595,44 @@
       });
     }
 
+    const luckySpinSearch = byId("zaLuckySpinSearch");
+    if (luckySpinSearch) {
+      luckySpinSearch.addEventListener("input", function () {
+        state.luckySpinSearch = luckySpinSearch.value.trim();
+        renderLuckySpins();
+      });
+    }
+
+    const saveLuckyDefaultBtn = byId("zaSaveLuckyDefaultBtn");
+    if (saveLuckyDefaultBtn) {
+      saveLuckyDefaultBtn.addEventListener("click", function () {
+        saveLuckyDefaultConfig().catch(function (err) {
+          console.error("[Zeratto Admin Lucky Default Error]", err);
+          showToast("Gagal simpan hadiah default.", "error");
+        });
+      });
+    }
+
+    const saveLuckyUserBtn = byId("zaSaveLuckyUserBtn");
+    if (saveLuckyUserBtn) {
+      saveLuckyUserBtn.addEventListener("click", function () {
+        saveLuckyUserConfig().catch(function (err) {
+          console.error("[Zeratto Admin Lucky User Save Error]", err);
+          showToast("Gagal simpan setting user.", "error");
+        });
+      });
+    }
+
+    const resetLuckyUserBtn = byId("zaResetLuckyUserBtn");
+    if (resetLuckyUserBtn) {
+      resetLuckyUserBtn.addEventListener("click", function () {
+        resetLuckyUserConfig().catch(function (err) {
+          console.error("[Zeratto Admin Lucky User Reset Error]", err);
+          showToast("Gagal reset setting user.", "error");
+        });
+      });
+    }
+
     const importBtn = byId("zaImportCodesBtn");
     if (importBtn) {
       importBtn.addEventListener("click", async function () {
@@ -1420,6 +1730,12 @@
         if (!btn) return;
         const action = String(btn.dataset.userAction || "");
         const uid = String(btn.dataset.uid || "");
+        if (action === "lucky") {
+          state.selectedLuckyUid = uid;
+          renderLuckyConfigPanel();
+          showToast("User lucky draw dipilih.", "success");
+          return;
+        }
         const item = btn.closest(".za-item");
         const input = item ? item.querySelector(".za-point-input") : null;
         const amount = toInt(input ? input.value : 0, 0);

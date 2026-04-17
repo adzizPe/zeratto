@@ -88,6 +88,7 @@ body.za-body {
 .za-controls select,
 .za-inline input,
 .za-import-box textarea,
+.za-form-block textarea,
 .za-user-points input,
 .za-search-row input {
   width: 100%;
@@ -278,6 +279,10 @@ body.za-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.za-user-layout {
+  align-items: start;
 }
 
 .za-card {
@@ -515,6 +520,50 @@ body.za-body {
   padding-inline: 14px;
 }
 
+.za-form-block {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--za-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.za-lucky-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.za-lucky-user-head {
+  display: grid;
+  gap: 3px;
+}
+
+.za-lucky-user-head strong {
+  color: var(--za-brand-dark);
+  font-size: 0.96rem;
+}
+
+.za-lucky-user-head span {
+  color: var(--za-soft);
+  font-size: 0.78rem;
+  word-break: break-word;
+}
+
+.za-lucky-helper {
+  border: 1px dashed #d8bc9d;
+  border-radius: 10px;
+  background: #fff8ee;
+  padding: 9px 10px;
+  color: var(--za-soft);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.za-lucky-helper strong {
+  color: var(--za-brand-dark);
+}
+
 .za-recap-summary {
   display: flex;
   flex-wrap: wrap;
@@ -624,6 +673,10 @@ body.za-body {
 @media (max-width: 1080px) {
   .za-stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .za-grid-two {
+    grid-template-columns: 1fr;
   }
 }
 

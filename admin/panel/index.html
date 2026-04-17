@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../zeratto-admin.css?v=20260415_1">
+  <link rel="stylesheet" href="../../zeratto-admin.css?v=20260417_1">
 </head>
 <body class="za-body">
   <div class="za-app" id="zaApp">
@@ -78,13 +78,59 @@
       </section>
 
       <section class="za-page" data-page="users">
-        <section class="za-card">
-          <div class="za-card-head">
-            <h2>User & Coin</h2>
-            <input id="zaUserSearch" type="search" placeholder="Cari nama/email/uid">
-          </div>
-          <div id="zaUsersList" class="za-list compact"></div>
-        </section>
+        <div class="za-grid-two za-user-layout">
+          <section class="za-card">
+            <div class="za-card-head">
+              <h2>User & Coin</h2>
+              <input id="zaUserSearch" type="search" placeholder="Cari nama/email/uid">
+            </div>
+            <div id="zaUsersList" class="za-list compact"></div>
+          </section>
+
+          <section class="za-card">
+            <div class="za-card-head">
+              <h2>Setting Lucky Draw</h2>
+            </div>
+
+            <div class="za-lucky-editor">
+              <label class="za-form-block" for="zaLuckyDefaultRewards">
+                Hadiah default
+                <textarea id="zaLuckyDefaultRewards" rows="3" placeholder="5, 8, 10, 12, 15, 18, 20, 25, 30"></textarea>
+              </label>
+              <div class="za-inline">
+                <button type="button" id="zaSaveLuckyDefaultBtn">Simpan Default</button>
+              </div>
+            </div>
+
+            <div id="zaLuckyUserEmpty" class="za-empty">Pilih user dulu dari daftar sebelah untuk atur lucky draw khusus user itu.</div>
+
+            <div id="zaLuckyUserEditor" class="za-lucky-editor" hidden>
+              <div class="za-lucky-user-head">
+                <strong id="zaLuckyUserName">-</strong>
+                <span id="zaLuckyUserMeta">-</span>
+              </div>
+
+              <div class="za-lucky-helper">
+                Default aktif: <strong id="zaLuckyDefaultPreview">-</strong>
+              </div>
+
+              <label class="za-form-block" for="zaLuckyUserRewards">
+                Hadiah khusus user
+                <textarea id="zaLuckyUserRewards" rows="3" placeholder="Kosongkan untuk pakai default"></textarea>
+              </label>
+
+              <label class="za-form-block" for="zaLuckyUserQueue">
+                Antrian hasil berikutnya
+                <input id="zaLuckyUserQueue" type="text" placeholder="Contoh: 20, 30, 25">
+              </label>
+
+              <div class="za-inline">
+                <button type="button" id="zaSaveLuckyUserBtn">Simpan User</button>
+                <button type="button" id="zaResetLuckyUserBtn" class="neutral">Reset User</button>
+              </div>
+            </div>
+          </section>
+        </div>
       </section>
 
       <section class="za-page" data-page="codes">
@@ -171,6 +217,14 @@
           </div>
           <div id="zaRedeemHistory" class="za-list compact"></div>
         </section>
+
+        <section class="za-card">
+          <div class="za-card-head">
+            <h2>Riwayat Lucky Draw</h2>
+            <input id="zaLuckySpinSearch" type="search" placeholder="Cari user/reward/uid">
+          </div>
+          <div id="zaLuckySpinHistory" class="za-list compact"></div>
+        </section>
       </section>
     </main>
   </div>
@@ -179,6 +233,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="../../zeratto-admin.js?v=20260415_1" defer></script>
+  <script src="../../zeratto-admin.js?v=20260417_1" defer></script>
 </body>
 </html>

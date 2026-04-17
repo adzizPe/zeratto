@@ -295,10 +295,9 @@
   }
 
   function normalizeGachaRewardList(raw, fallbackList, maxItems) {
-    const fallback = Array.isArray(fallbackList) && fallbackList.length
-      ? fallbackList
-      : DEFAULT_GACHA_REWARD_VALUES;
-    const limit = Math.max(1, toInt(maxItems, fallback.length || DEFAULT_GACHA_REWARD_VALUES.length));
+    const hasExplicitFallback = Array.isArray(fallbackList);
+    const fallback = hasExplicitFallback ? fallbackList.slice() : DEFAULT_GACHA_REWARD_VALUES.slice();
+    const limit = Math.max(1, toInt(maxItems, (fallback.length || DEFAULT_GACHA_REWARD_VALUES.length)));
     let items = [];
 
     if (Array.isArray(raw)) {
@@ -314,6 +313,8 @@
     if (!items.length) {
       items = fallback.slice();
     }
+
+    if (!items.length) return [];
 
     return items.slice(0, limit);
   }

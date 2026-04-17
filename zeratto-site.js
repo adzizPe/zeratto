@@ -256,6 +256,25 @@
     return safeValue.toLocaleString("id-ID") + " Coin";
   }
 
+  function normalizeLuckyBoardRewards(raw) {
+    const source = Array.isArray(raw) ? raw.slice() : [];
+    const normalized = source
+      .map(function (value) {
+        return Number.isFinite(Number(value)) ? Math.max(0, Math.trunc(Number(value))) : 0;
+      })
+      .filter(function (value) {
+        return value > 0;
+      });
+    const pool = normalized.length ? normalized : GACHA_REWARDS.slice();
+    const board = [];
+
+    for (let index = 0; index < 9; index += 1) {
+      board.push(pool[index % pool.length]);
+    }
+
+    return board;
+  }
+
   function formatIdrValue(value) {
     const safeValue = Number.isFinite(Number(value)) ? Math.max(0, Math.trunc(Number(value))) : 0;
     return "Rp " + safeValue.toLocaleString("id-ID");
@@ -1207,32 +1226,40 @@
     const spinBtn = document.getElementById("zrGachaSpinBtn");
     const spinValue = document.getElementById("zrGachaSpinValue");
     const redeemValue = document.getElementById("zrGachaRedeemValue");
+    const popup = document.getElementById("zrLuckyPopup");
+    const popupValue = document.getElementById("zrLuckyPopupValue");
     if (!section || !grid || !notice || !spinBtn) return;
 
     const tiles = Array.from(grid.querySelectorAll(".zr-gacha-cell"));
     let gachaState = readStoredGachaState();
     let spinning = false;
+    let previewRequestId = 0;
+    let popupTimer = 0;
 
-    function formatRewardLabel(reward) {
-      return formatCoinValue(reward && reward.coin);
+    function getAuthApi() {
+      return window.ZerattoAuth && typeof window.ZerattoAuth.spinLuckyDraw === "function"
+        ? window.ZerattoAuth
+        : null;
     }
 
-    function renderTileReward(tile, reward, index) {
-      const rewardCoin = Number(reward && reward.coin) || 0;
-      const rewardLabel = formatRewardLabel(reward);
-      tile.dataset.rewardCoin = String(rewardCoin);
+    function renderTileReward(tile, rewardCoin, index) {
+      const safeRewardCoin = Number.isFinite(Number(rewardCoin)) ? Math.max(0, Math.trunc(Number(rewardCoin))) : 0;
+      const rewardLabel = formatCoinValue(safeRewardCoin);
+      tile.dataset.rewardCoin = String(safeRewardCoin);
       tile.dataset.rewardLabel = rewardLabel;
-      tile.classList.remove("is-opened", "is-spinning");
+      tile.classList.remove("is-winner", "is-spinning");
       tile.disabled = false;
       tile.innerHTML = '<span class="zr-gacha-coin-icon">' + createNavIcon("coins") + "</span>" +
         "<strong>" + rewardLabel + "</strong>";
-      tile.setAttribute("aria-label", "Bonus coin " + rewardLabel + " slot " + String(index + 1));
+      tile.setAttribute("aria-label", "Lucky draw " + rewardLabel + " slot " + String(index + 1));
     }
 
-    function getAvailableTiles() {
-      return tiles.filter(function (tile) {
-        return !tile.classList.contains("is-opened");
+    function applyBoardRewards(rewards) {
+      const board = normalizeLuckyBoardRewards(rewards);
+      tiles.forEach(function (tile, index) {
+        renderTileReward(tile, board[index], index);
       });
+      initIcons();
     }
 
     function updateSectionVisibility() {
@@ -1242,31 +1269,23 @@
     function renderGachaSummary() {
       if (spinValue) spinValue.textContent = String(gachaState.availableSpins || 0) + "x";
       if (redeemValue) redeemValue.textContent = String(gachaState.totalRedeems || 0) + "x";
-      if (title) {
-        title.textContent = gachaState.availableSpins > 0 ? "Bonus Spin Redeem" : "Bonus Redeem Kamu";
-      }
+      if (title) title.textContent = "Lucky Draw";
     }
 
     function resolveDefaultNotice() {
       if (!isUserLoggedIn()) {
-        return "Login Google dulu sebelum membuka bonus spin redeem.";
+        return "Login dulu";
       }
 
       if (gachaState.totalRedeems <= 0) {
-        return "Redeem kode valid dulu. Setiap 1 redeem berhasil memberi 1x spin bonus.";
-      }
-
-      if (!getAvailableTiles().length) {
-        return gachaState.availableSpins > 0
-          ? "Kamu masih punya " + gachaState.availableSpins + "x spin bonus. Tekan Gunakan Spin untuk putaran berikutnya."
-          : "Semua spin bonus sudah dipakai. Redeem kode lagi untuk dapat spin baru.";
+        return "1 redeem = 1 spin";
       }
 
       if (gachaState.availableSpins <= 0) {
-        return "Spin bonus kamu habis. Redeem kode lagi untuk mendapat spin baru.";
+        return "Spin habis";
       }
 
-      return "Kamu punya " + gachaState.availableSpins + "x spin bonus dari redeem yang berhasil.";
+      return "Spin " + gachaState.availableSpins + "x";
     }
 
     function syncControls(customNotice) {
@@ -1279,24 +1298,8 @@
         return;
       }
 
-      if (!isUserLoggedIn() || gachaState.totalRedeems <= 0) {
-        spinBtn.disabled = true;
-        notice.textContent = customNotice || resolveDefaultNotice();
-        return;
-      }
-
-      spinBtn.disabled = gachaState.availableSpins <= 0;
+      spinBtn.disabled = !(isUserLoggedIn() && gachaState.availableSpins > 0);
       notice.textContent = customNotice || resolveDefaultNotice();
-    }
-
-    function resetBoard() {
-      const boardRewards = shuffleItems(GACHA_REWARDS).slice(0, tiles.length);
-      spinning = false;
-      tiles.forEach(function (tile, index) {
-        renderTileReward(tile, boardRewards[index] || { coin: 0 }, index);
-      });
-      initIcons();
-      syncControls();
     }
 
     function clearSpinState() {
@@ -1305,113 +1308,170 @@
       });
     }
 
-    function finishSpin(targetTile, rewardLabel) {
-      clearSpinState();
-      targetTile.classList.add("is-opened");
-      targetTile.disabled = true;
-      targetTile.setAttribute("aria-label", "Bonus coin didapat: " + rewardLabel);
+    function clearWinnerState() {
+      tiles.forEach(function (tile) {
+        tile.classList.remove("is-winner");
+      });
+    }
 
-      spinning = false;
-      if (gachaState.availableSpins > 0) {
-        syncControls("Spin berhasil. Kamu dapat +" + rewardLabel + " dan coin langsung masuk ke akun. Spin bonus tersisa " + gachaState.availableSpins + "x.");
+    function hideLuckyPopup(immediate) {
+      if (!popup) return;
+      if (popupTimer) {
+        window.clearTimeout(popupTimer);
+        popupTimer = 0;
+      }
+      popup.classList.remove("is-showing");
+      if (immediate) {
+        popup.classList.remove("is-leaving");
+        popup.hidden = true;
+        return;
+      }
+      popup.classList.add("is-leaving");
+      window.setTimeout(function () {
+        popup.hidden = true;
+        popup.classList.remove("is-leaving");
+      }, 180);
+    }
+
+    function showLuckyPopup(rewardLabel) {
+      if (!popup || !popupValue) return;
+      if (popupTimer) {
+        window.clearTimeout(popupTimer);
+        popupTimer = 0;
+      }
+      popupValue.textContent = rewardLabel;
+      popup.hidden = false;
+      popup.classList.remove("is-leaving");
+      popup.classList.add("is-showing");
+      initIcons();
+      popupTimer = window.setTimeout(function () {
+        hideLuckyPopup(false);
+      }, 1700);
+    }
+
+    async function loadBoardPreview() {
+      const authApi = getAuthApi();
+      const requestId = ++previewRequestId;
+
+      if (!isUserLoggedIn() || !authApi || typeof authApi.getLuckyDrawPreview !== "function") {
+        applyBoardRewards(GACHA_REWARDS);
         return;
       }
 
-      syncControls("Spin berhasil. Kamu dapat +" + rewardLabel + " dan coin langsung masuk ke akun. Spin bonus habis, redeem kode lagi untuk lanjut.");
+      try {
+        const preview = await authApi.getLuckyDrawPreview();
+        if (requestId !== previewRequestId) return;
+        applyBoardRewards(preview && preview.boardRewards);
+      } catch (_err) {
+        if (requestId !== previewRequestId) return;
+        applyBoardRewards(GACHA_REWARDS);
+      }
     }
 
-    async function reserveSpin(rewardCoin) {
-      const authApi = window.ZerattoAuth && typeof window.ZerattoAuth.consumeGachaSpin === "function"
-        ? window.ZerattoAuth
-        : null;
+    function finishSpin(targetIndex, rewardLabel) {
+      const targetTile = tiles[targetIndex];
+      clearSpinState();
+      clearWinnerState();
+      if (targetTile) {
+        targetTile.classList.add("is-winner");
+        targetTile.setAttribute("aria-label", "Hasil lucky draw " + rewardLabel);
+      }
+
+      spinning = false;
+      showLuckyPopup(rewardLabel);
+      syncControls(gachaState.availableSpins > 0 ? "Spin " + gachaState.availableSpins + "x" : "Spin habis");
+    }
+
+    function buildSpinSteps(targetIndex) {
+      const steps = [];
+      let lastIndex = -1;
+      const totalSteps = 16 + Math.floor(Math.random() * 10);
+
+      for (let index = 0; index < totalSteps; index += 1) {
+        let nextIndex = Math.floor(Math.random() * tiles.length);
+        if (tiles.length > 1) {
+          while (nextIndex === lastIndex) {
+            nextIndex = Math.floor(Math.random() * tiles.length);
+          }
+        }
+        steps.push(nextIndex);
+        lastIndex = nextIndex;
+      }
+
+      if (lastIndex === targetIndex && tiles.length > 1) {
+        let bridgeIndex = Math.floor(Math.random() * tiles.length);
+        while (bridgeIndex === targetIndex) {
+          bridgeIndex = Math.floor(Math.random() * tiles.length);
+        }
+        steps.push(bridgeIndex);
+      }
+
+      steps.push(targetIndex);
+      return steps;
+    }
+
+    async function reserveSpin() {
+      const authApi = getAuthApi();
       if (!authApi) {
         return {
           ok: false,
           state: gachaState,
-          message: "Sistem spin belum siap."
+          message: "Lucky draw belum siap."
         };
       }
-      return authApi.consumeGachaSpin(rewardCoin);
+      return authApi.spinLuckyDraw();
     }
 
     async function spinBoard() {
       if (spinning) return;
 
       if (!isUserLoggedIn()) {
-        syncControls("Login Google dulu sebelum membuka bonus spin redeem.");
+        syncControls("Login dulu");
         return;
       }
 
       if (gachaState.totalRedeems <= 0) {
-        syncControls("Redeem kode valid dulu. Setiap 1 redeem berhasil memberi 1x spin bonus.");
+        syncControls("1 redeem = 1 spin");
         return;
       }
 
       if (gachaState.availableSpins <= 0) {
-        syncControls("Spin bonus kamu habis. Redeem kode lagi untuk mendapat spin baru.");
+        syncControls("Spin habis");
         return;
       }
 
-      if (!getAvailableTiles().length) {
-        resetBoard();
-      }
-
-      const availableTiles = getAvailableTiles();
-      if (!availableTiles.length) return;
-
-      const targetTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
-      const rewardCoin = Number(targetTile.dataset.rewardCoin || 0);
-      const rewardLabel = String(targetTile.dataset.rewardLabel || formatCoinValue(rewardCoin));
-
       spinBtn.disabled = true;
-      notice.textContent = "Memeriksa spin bonus...";
+      notice.textContent = "Memutar...";
+      hideLuckyPopup(true);
+      clearSpinState();
+      clearWinnerState();
 
-      const consumeResult = await reserveSpin(rewardCoin);
+      const consumeResult = await reserveSpin();
       gachaState = normalizeGachaState(consumeResult && consumeResult.state);
       renderGachaSummary();
 
       if (!consumeResult || !consumeResult.ok) {
-        syncControls(consumeResult && consumeResult.message ? consumeResult.message : "Spin belum tersedia.");
+        syncControls(consumeResult && consumeResult.message ? consumeResult.message : "Lucky draw belum tersedia.");
         return;
       }
 
-      const sequence = availableTiles.slice();
-      const steps = [];
+      applyBoardRewards(consumeResult.boardRewards);
+      const targetIndex = Math.max(0, Math.min(tiles.length - 1, Math.trunc(Number(consumeResult.winningIndex) || 0)));
+      const rewardLabel = formatCoinValue(consumeResult.rewardCoin);
+      const steps = buildSpinSteps(targetIndex);
       let step = 0;
 
-      function pickRandomTile(excludeTile) {
-        const candidates = sequence.filter(function (tile) {
-          return tile !== excludeTile;
-        });
-        const pool = candidates.length ? candidates : sequence;
-        return pool[Math.floor(Math.random() * pool.length)];
-      }
-
-      const randomMoves = Math.max(8, sequence.length * 2) + Math.floor(Math.random() * 6);
-      let lastTile = null;
-
-      for (let index = 0; index < randomMoves; index += 1) {
-        const nextTile = pickRandomTile(lastTile);
-        steps.push(nextTile);
-        lastTile = nextTile;
-      }
-
-      if (lastTile === targetTile && sequence.length > 1) {
-        steps.push(pickRandomTile(targetTile));
-      }
-      steps.push(targetTile);
-
       spinning = true;
-      notice.textContent = "Spin berjalan...";
+      notice.textContent = "Berjalan...";
 
       function tick() {
         clearSpinState();
-        const activeTile = steps[step];
-        activeTile.classList.add("is-spinning");
+        const activeTile = tiles[steps[step]];
+        if (activeTile) activeTile.classList.add("is-spinning");
 
         if (step >= steps.length - 1) {
           window.setTimeout(function () {
-            finishSpin(targetTile, rewardLabel);
+            finishSpin(targetIndex, rewardLabel);
           }, 120);
           return;
         }
@@ -1434,6 +1494,7 @@
     function syncStateFromStorage(customNotice) {
       gachaState = readStoredGachaState();
       syncControls(customNotice);
+      loadBoardPreview().catch(function () {});
     }
 
     window.addEventListener("storage", function (event) {
@@ -1446,6 +1507,7 @@
     window.addEventListener(USER_GACHA_EVENT, function (event) {
       gachaState = normalizeGachaState(event && event.detail);
       syncControls();
+      loadBoardPreview().catch(function () {});
     });
 
     window.addEventListener("userLoggedIn", function () {
@@ -1454,10 +1516,23 @@
 
     window.addEventListener("userLoggedOut", function () {
       gachaState = normalizeGachaState(null);
-      resetBoard();
+      hideLuckyPopup(true);
+      applyBoardRewards(GACHA_REWARDS);
+      syncControls();
     });
 
-    resetBoard();
+    if (popup) {
+      popup.addEventListener("click", function (event) {
+        const target = event.target;
+        if (target && target.closest && target.closest("[data-zr-lucky-close]")) {
+          hideLuckyPopup(false);
+        }
+      });
+    }
+
+    applyBoardRewards(GACHA_REWARDS);
+    syncControls();
+    loadBoardPreview().catch(function () {});
   }
 
   function initIcons() {

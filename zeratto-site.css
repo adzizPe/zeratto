@@ -1568,13 +1568,13 @@ body.zr-site-shell::after,
 
 .zr-gacha-card {
   display: grid;
-  gap: 18px;
+  gap: 20px;
 }
 
 .zr-gacha-machine {
   display: grid;
-  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(260px, 380px) minmax(0, 1fr);
+  gap: 20px;
   align-items: center;
 }
 
@@ -1586,26 +1586,27 @@ body.zr-site-shell::after,
 }
 
 .zr-gacha-head h3 {
-  margin: 0 0 8px;
+  margin: 0;
   font-family: "Bricolage Grotesque", sans-serif;
+  font-size: clamp(1.25rem, 3vw, 1.9rem);
 }
 
 .zr-gacha-board-wrap {
-  padding: 14px;
-  border-radius: 28px;
+  padding: 16px;
+  border-radius: 34px;
   background:
     radial-gradient(
-      circle at top left,
-      rgba(255, 214, 158, 0.26),
-      transparent 28%
+      circle at 20% 15%,
+      rgba(255, 215, 157, 0.26),
+      transparent 30%
     ),
     radial-gradient(
-      circle at bottom right,
-      rgba(120, 74, 48, 0.18),
+      circle at 80% 85%,
+      rgba(255, 135, 86, 0.12),
       transparent 34%
     ),
-    linear-gradient(155deg, #4c2e1d 0%, #6b4128 38%, #2c1b12 100%);
-  box-shadow: 0 16px 30px rgba(66, 37, 18, 0.16);
+    linear-gradient(145deg, #2c1b12 0%, #5a3722 45%, #21140e 100%);
+  box-shadow: 0 18px 34px rgba(66, 37, 18, 0.16);
 }
 
 .zr-gacha-control-panel {
@@ -1621,16 +1622,16 @@ body.zr-site-shell::after,
 
 .zr-gacha-stat {
   display: grid;
-  gap: 4px;
+  gap: 3px;
   padding: 12px 14px;
-  border-radius: 18px;
-  border: 1px solid rgba(114, 73, 44, 0.16);
-  background: rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(180deg, rgba(255, 250, 245, 0.98), rgba(248, 232, 208, 0.96));
 }
 
 .zr-gacha-stat span {
   color: var(--site-ink-soft);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1645,67 +1646,86 @@ body.zr-site-shell::after,
 
 .zr-gacha-notice {
   min-width: 0;
-  padding: 12px 14px;
-  border-radius: 18px;
-  border: 1px solid rgba(114, 73, 44, 0.16);
-  background: rgba(255, 255, 255, 0.74);
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(180deg, rgba(255, 247, 236, 0.96), rgba(244, 228, 205, 0.94));
   color: var(--site-ink);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.3;
+  text-align: center;
 }
 
 .zr-gacha-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .zr-gacha-grid--compact {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .zr-gacha-tile {
-  min-height: 92px;
+  min-height: 94px;
   padding: 12px;
-  border: 1px solid rgba(114, 73, 44, 0.16);
-  border-radius: 22px;
+  border: none;
+  border-radius: 28px 22px 30px 24px / 24px 30px 22px 28px;
   background: linear-gradient(180deg, #fff9f2 0%, #f4e3ce 100%);
   color: #7c4e31;
   font-family: "Bricolage Grotesque", sans-serif;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 800;
   line-height: 1.3;
   text-align: center;
   word-break: break-word;
-  box-shadow: none;
+  box-shadow: 0 8px 16px rgba(56, 34, 20, 0.08);
 }
 
 .zr-gacha-cell {
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 10px;
-  min-height: 82px;
+  gap: 8px;
+  min-height: 88px;
   padding: 10px;
-  border-radius: 18px;
+  border-radius: 28px 22px 30px 24px / 24px 30px 22px 28px;
   background: linear-gradient(
     180deg,
     rgba(255, 250, 245, 0.98),
     rgba(243, 226, 202, 0.96)
   );
+  transform: rotate(-1.4deg);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.zr-gacha-cell:nth-child(2n) {
+  border-radius: 24px 30px 22px 28px / 30px 22px 28px 24px;
+  transform: rotate(1.3deg);
+}
+
+.zr-gacha-cell:nth-child(3n) {
+  border-radius: 26px 22px 32px 20px / 22px 32px 20px 26px;
+  transform: rotate(-0.6deg);
 }
 
 .zr-gacha-coin-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 14px;
-  background: linear-gradient(145deg, #7c4b2d, #4d2e1b);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 237, 185, 0.96), transparent 32%),
+    linear-gradient(145deg, #f1b653, #955629);
   color: #fff7ef;
+  box-shadow: inset 0 -3px 0 rgba(66, 37, 18, 0.16);
 }
 
 .zr-gacha-coin-icon svg {
@@ -1713,26 +1733,11 @@ body.zr-site-shell::after,
   height: 18px;
 }
 
-.zr-gacha-cell-no {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  min-height: 26px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(111, 72, 45, 0.1);
-  color: #8e5a39;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
 .zr-gacha-cell strong {
   display: block;
   width: 100%;
-  font-size: 0.86rem;
-  line-height: 1.2;
+  font-size: 0.88rem;
+  line-height: 1.1;
   text-align: center;
 }
 
@@ -1741,12 +1746,13 @@ body.zr-site-shell::after,
   background:
     radial-gradient(
       circle at top left,
-      rgba(255, 239, 186, 0.95),
+      rgba(255, 244, 196, 0.95),
       transparent 32%
     ),
-    linear-gradient(145deg, #ffb45f 0%, #ff7a63 48%, #ff4d7a 100%);
+    linear-gradient(145deg, #ffd269 0%, #ff9153 48%, #ff5b77 100%);
   color: #fffdfa;
-  box-shadow: 0 10px 20px rgba(255, 123, 80, 0.24);
+  box-shadow: 0 12px 24px rgba(255, 123, 80, 0.24);
+  transform: scale(1.04) rotate(0deg);
 }
 
 .zr-gacha-cell.is-spinning .zr-gacha-coin-icon {
@@ -1754,25 +1760,20 @@ body.zr-site-shell::after,
   color: #ffffff;
 }
 
-.zr-gacha-tile.is-opened {
-  background: linear-gradient(180deg, #6c4125 0%, #2f1b10 100%);
-  border-color: transparent;
-  color: #fff6ee;
-  font-size: 0.82rem;
-}
-
-.zr-gacha-cell.is-opened {
+.zr-gacha-cell.is-winner {
   background:
     radial-gradient(
       circle at top left,
-      rgba(255, 215, 171, 0.32),
+      rgba(255, 233, 186, 0.36),
       transparent 28%
     ),
-    linear-gradient(145deg, #3c2316 0%, #24150e 100%);
-  box-shadow: 0 12px 24px rgba(41, 24, 15, 0.18);
+    linear-gradient(145deg, #5a351f 0%, #22150e 100%);
+  color: #fff7ef;
+  box-shadow: 0 14px 28px rgba(41, 24, 15, 0.22);
+  transform: scale(1.04) rotate(0deg);
 }
 
-.zr-gacha-cell.is-opened .zr-gacha-coin-icon {
+.zr-gacha-cell.is-winner .zr-gacha-coin-icon {
   background: rgba(255, 255, 255, 0.12);
   color: #fff6ee;
 }
@@ -1785,6 +1786,100 @@ body.zr-site-shell::after,
 
 .zr-gacha-actions > button {
   width: 100%;
+}
+
+.zr-lucky-popup-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.zr-lucky-popup-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 8, 6, 0.36);
+  backdrop-filter: blur(6px);
+}
+
+.zr-lucky-popup-card {
+  position: relative;
+  z-index: 1;
+  min-width: min(100%, 260px);
+  padding: 24px 26px;
+  border-radius: 36px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 233, 184, 0.32), transparent 30%),
+    linear-gradient(145deg, rgba(48, 30, 20, 0.98), rgba(22, 14, 10, 0.98));
+  color: #fff8ef;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  box-shadow: 0 22px 38px rgba(16, 9, 6, 0.28);
+  transform: scale(0.78);
+  opacity: 0;
+}
+
+.zr-lucky-popup-shell.is-showing .zr-lucky-popup-card {
+  animation: zrLuckyPopIn 0.42s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+}
+
+.zr-lucky-popup-shell.is-leaving .zr-lucky-popup-card {
+  animation: zrLuckyPopOut 0.18s ease forwards;
+}
+
+.zr-lucky-popup-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 248, 207, 0.98), transparent 32%),
+    linear-gradient(145deg, #f1b554, #8f522b);
+  color: #fff9f2;
+  box-shadow: inset 0 -4px 0 rgba(62, 34, 19, 0.18);
+}
+
+.zr-lucky-popup-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.zr-lucky-popup-card strong {
+  display: block;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  line-height: 1;
+}
+
+@keyframes zrLuckyPopIn {
+  0% {
+    transform: scale(0.72);
+    opacity: 0;
+  }
+  68% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes zrLuckyPopOut {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0;
+  }
 }
 
 .zr-tukar-menu-card--dark {
@@ -4452,4 +4547,117 @@ body.zr-site-shell[data-zr-theme="dark"]
   .zr-pulsa-nominal-card.is-active
   small {
   color: rgba(255, 247, 239, 0.78);
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-gacha-notice {
+  background: linear-gradient(180deg, rgba(52, 38, 30, 0.96), rgba(31, 22, 18, 0.94));
+  color: #f7e7d7;
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-gacha-board-wrap {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 206, 129, 0.16), transparent 30%),
+    radial-gradient(circle at 80% 85%, rgba(255, 118, 88, 0.14), transparent 34%),
+    linear-gradient(145deg, #201611 0%, #38261d 44%, #17100d 100%);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.28);
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-gacha-cell {
+  background: linear-gradient(180deg, rgba(78, 55, 42, 0.98), rgba(47, 34, 27, 0.98));
+  color: #fff6ee;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.16);
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-gacha-cell.is-spinning {
+  background:
+    radial-gradient(circle at top left, rgba(255, 238, 191, 0.84), transparent 32%),
+    linear-gradient(145deg, #ffcb63 0%, #ff8b52 48%, #ff5774 100%);
+  color: #fffdfa;
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-gacha-cell.is-winner {
+  background:
+    radial-gradient(circle at top left, rgba(255, 227, 167, 0.28), transparent 28%),
+    linear-gradient(145deg, #6d472b 0%, #241711 100%);
+  color: #fff9f2;
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-gacha-coin-icon {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 246, 198, 0.94), transparent 32%),
+    linear-gradient(145deg, #f2be62, #8f532a);
+  color: #2a1a11;
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-lucky-popup-backdrop {
+  background: rgba(6, 4, 3, 0.52);
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-lucky-popup-card {
+  background:
+    radial-gradient(circle at top left, rgba(255, 226, 166, 0.24), transparent 30%),
+    linear-gradient(145deg, rgba(42, 28, 20, 0.98), rgba(17, 11, 8, 0.98));
+}
+
+@media (max-width: 720px) {
+  .zr-gacha-board-wrap {
+    padding: 14px;
+    border-radius: 28px;
+  }
+
+  .zr-gacha-grid--compact {
+    gap: 8px;
+  }
+
+  .zr-gacha-cell,
+  .zr-gacha-tile {
+    min-height: 82px;
+    padding: 8px;
+  }
+
+  .zr-gacha-coin-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .zr-gacha-cell strong {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .zr-gacha-notice {
+    font-size: 0.76rem;
+    padding: 9px 12px;
+  }
+
+  .zr-gacha-cell,
+  .zr-gacha-tile {
+    min-height: 76px;
+  }
+
+  .zr-gacha-coin-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .zr-gacha-coin-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .zr-gacha-cell strong {
+    font-size: 0.72rem;
+  }
+
+  .zr-lucky-popup-card {
+    min-width: min(100%, 220px);
+    padding: 20px 18px;
+    border-radius: 28px;
+  }
+
+  .zr-lucky-popup-icon {
+    width: 64px;
+    height: 64px;
+  }
 }
