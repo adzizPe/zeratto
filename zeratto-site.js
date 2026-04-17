@@ -1379,15 +1379,21 @@
 
       spinning = false;
       showLuckyPopup(rewardLabel);
+      
+      if (popup) {
+        generateConfetti(popup);
+      }
+
       syncControls(gachaState.availableSpins > 0 ? "Spin " + gachaState.availableSpins + "x" : "Spin habis");
     }
 
     function buildSpinSteps(targetIndex) {
       const steps = [];
       let lastIndex = -1;
-      const totalSteps = 16 + Math.floor(Math.random() * 10);
+      const baseSteps = 18 + Math.floor(Math.random() * 14);
+      const randomness = Math.random();
 
-      for (let index = 0; index < totalSteps; index += 1) {
+      for (let index = 0; index < baseSteps; index += 1) {
         let nextIndex = Math.floor(Math.random() * tiles.length);
         if (tiles.length > 1) {
           while (nextIndex === lastIndex) {
@@ -1408,6 +1414,43 @@
 
       steps.push(targetIndex);
       return steps;
+    }
+
+    function generateConfetti(container) {
+      if (!container) return;
+      const confettiContainer = container.querySelector(".zr-lucky-confetti");
+      if (!confettiContainer) return;
+
+      const colors = ["#ffc857", "#ff9153", "#ff5b77", "#f1a547", "#d97d3a"];
+      const pieceCount = 12 + Math.floor(Math.random() * 8);
+
+      for (let i = 0; i < pieceCount; i += 1) {
+        const piece = document.createElement("div");
+        piece.className = "zr-confetti-piece";
+        const size = 8 + Math.random() * 6;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const duration = 1.2 + Math.random() * 0.8;
+        const delay = Math.random() * 0.1;
+        const xOffset = Math.random() * 200 - 100;
+
+        piece.style.width = size + "px";
+        piece.style.height = size + "px";
+        piece.style.background = color;
+        piece.style.left = "50%";
+        piece.style.top = "50%";
+        piece.style.borderRadius = Math.random() > 0.5 ? "50%" : "0";
+        piece.style.transform = "translate(-50%, -50%) translateX(" + xOffset + "px)";
+
+        confettiContainer.appendChild(piece);
+
+        window.setTimeout(function () {
+          piece.style.animation = "zrConfettiFall " + duration + "s linear forwards";
+          piece.classList.add("falling");
+          window.setTimeout(function () {
+            piece.remove();
+          }, duration * 1000);
+        }, delay * 1000);
+      }
     }
 
     async function reserveSpin() {
@@ -1519,6 +1562,21 @@
       hideLuckyPopup(true);
       applyBoardRewards(GACHA_REWARDS);
       syncControls();
+    });
+
+    function scrollToLuckyDraw() {
+      if (!section) return;
+      window.setTimeout(function () {
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+
+    window.addEventListener("redeemSuccess", function (event) {
+      if (!section || section.hidden) return;
+      scrollToLuckyDraw();
+      gachaState = readStoredGachaState();
+      syncControls();
+      loadBoardPreview().catch(function () {});
     });
 
     if (popup) {

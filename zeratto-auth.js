@@ -1464,6 +1464,8 @@
       );
       updateTukarPointUI(currentPoints);
       await syncRedeemState(currentUser);
+      
+      window.dispatchEvent(new CustomEvent("redeemSuccess", { detail: { pointGain, totalCoins: currentPoints } }));
     } catch (err) {
       showAlert("zrRedeemMessage", "error", "Terjadi error saat redeem. Coba ulangi lagi.");
       console.error("[Zeratto Redeem Error]", err);
