@@ -1781,6 +1781,10 @@ body.zr-site-shell::after,
   pointer-events: none;
 }
 
+.zr-lucky-popup-shell[hidden] {
+  display: none !important;
+}
+
 .zr-lucky-popup-shell.is-showing {
   pointer-events: auto;
 }
