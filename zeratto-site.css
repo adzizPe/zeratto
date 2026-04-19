@@ -1525,7 +1525,11 @@ body.zr-site-shell::after,
   padding: 14px 16px;
   border-radius: 26px;
   background:
-    radial-gradient(circle at 12% 30%, rgba(255, 255, 255, 0.9), transparent 22%),
+    radial-gradient(
+      circle at 12% 30%,
+      rgba(255, 255, 255, 0.9),
+      transparent 22%
+    ),
     linear-gradient(135deg, #fff8f2 0%, #ffe4d8 54%, #ffc9ae 100%);
   color: #2c1b13;
   text-decoration: none;
@@ -1555,7 +1559,9 @@ body.zr-site-shell::after,
   height: 52px;
   border-radius: 18px;
   background: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(238, 77, 45, 0.12), 0 10px 20px rgba(238, 77, 45, 0.16);
+  box-shadow:
+    inset 0 0 0 1px rgba(238, 77, 45, 0.12),
+    0 10px 20px rgba(238, 77, 45, 0.16);
 }
 
 .zr-shopee-mark img {
@@ -2102,14 +2108,29 @@ body.zr-site-shell::after,
     0 0 0 8px rgba(48, 30, 20, 0.3),
     0 0 0 12px #fff7ef,
     0 0 40px rgba(255, 165, 100, 0.25);
-  background: radial-gradient(circle at center, #2f1d14 0 20%, transparent 20% 100%);
+  background: radial-gradient(
+    circle at center,
+    #2f1d14 0 20%,
+    transparent 20% 100%
+  );
 }
 
 .zr-wheel-circle {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: conic-gradient(from -90deg, #db7093 0deg 40deg, #20b2aa 40deg 80deg, #d63e92 80deg 120deg, #daa520 120deg 160deg, #ff34f0 160deg 200deg, #ff7f50 200deg 240deg, #3cb371 240deg 280deg, #4169e1 280deg 320deg, #c77dff 320deg 360deg);
+  background: conic-gradient(
+    from -90deg,
+    #db7093 0deg 40deg,
+    #20b2aa 40deg 80deg,
+    #d63e92 80deg 120deg,
+    #daa520 120deg 160deg,
+    #ff34f0 160deg 200deg,
+    #ff7f50 200deg 240deg,
+    #3cb371 240deg 280deg,
+    #4169e1 280deg 320deg,
+    #c77dff 320deg 360deg
+  );
   transition: transform 5.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   transform-origin: center;
   overflow: hidden;
@@ -2120,7 +2141,11 @@ body.zr-site-shell::after,
   position: absolute;
   inset: 17%;
   border-radius: 50%;
-  background: radial-gradient(circle at center, rgba(47, 29, 20, 0.98), rgba(32, 19, 14, 0.96));
+  background: radial-gradient(
+    circle at center,
+    rgba(47, 29, 20, 0.98),
+    rgba(32, 19, 14, 0.96)
+  );
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
 }
 
@@ -4217,7 +4242,11 @@ body.zr-site-shell[data-zr-theme="dark"] .zr-diamond-intro-card {
 
 body.zr-site-shell[data-zr-theme="dark"] .zr-shopee-strip {
   background:
-    radial-gradient(circle at 12% 30%, rgba(255, 197, 151, 0.16), transparent 24%),
+    radial-gradient(
+      circle at 12% 30%,
+      rgba(255, 197, 151, 0.16),
+      transparent 24%
+    ),
     linear-gradient(135deg, #2c1a13 0%, #3a2117 55%, #5b2b1e 100%);
   color: #fff7ef;
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.26);
