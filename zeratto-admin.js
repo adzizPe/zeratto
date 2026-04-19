@@ -33,7 +33,9 @@
   const PATH_GACHA_CONFIG = "zerattoLuckyDrawConfig";
   const PATH_GACHA_LOGS = "zerattoLuckyDrawSpinLogs";
   const PAGE_NAMES = ["dashboard", "exchange", "users", "codes", "redeems"];
-  const REDEEM_VALUE_RP = 10;
+  const REDEEM_VALUE_RP = 0;
+  const REDEEM_SPIN_GAIN = 1;
+  const GACHA_BOARD_SIZE = 9;
   const EWALLET_MIN_COIN = 100;
   const EWALLET_RUPIAH_PER_COIN = 10;
   const AUTO_GENERATE_CODE_TOTAL = 2000;
@@ -482,7 +484,7 @@
         name: String(row.name || "Pengguna Zeratto"),
         email: String(row.email || "-"),
         rewardCoin: toInt(row.rewardCoin, 0),
-        boardRewards: normalizeRewardList(row.boardRewards, DEFAULT_GACHA_REWARD_VALUES, 8),
+        boardRewards: normalizeRewardList(row.boardRewards, DEFAULT_GACHA_REWARD_VALUES, GACHA_BOARD_SIZE),
         winningIndex: toInt(row.winningIndex, 0),
         source: String(row.source || "random"),
         remainingSpins: toInt(row.remainingSpins, 0),
@@ -514,6 +516,7 @@
         key: key,
         code: String(row.code || key),
         pointValue: REDEEM_VALUE_RP,
+        spinGain: toInt(row.spinGain, REDEEM_SPIN_GAIN),
         active: active,
         distributed: distributed,
         distributedAt: distributedAt,
@@ -573,6 +576,7 @@
         email: String(row.email || "-"),
         code: String(row.code || row.codeKey || "-"),
         pointGain: toInt(row.pointGain, 0),
+        spinGain: toInt(row.spinGain, REDEEM_SPIN_GAIN),
         pointBalanceAfter: toInt(row.pointBalanceAfter, 0),
         redeemedAt: parseTimestamp(row.redeemedAt)
       });
@@ -825,7 +829,7 @@
       return [
         "<article class=\"za-item\">",
         "<div class=\"za-item-top\">",
-        "<div class=\"za-item-title\"><strong>", escapeHtml(row.code), "</strong><span>Nominal ", escapeHtml(formatRupiah(row.pointValue)), " | Key ", escapeHtml(row.key), "</span></div>",
+        "<div class=\"za-item-title\"><strong>", escapeHtml(row.code), "</strong><span>Reward ", escapeHtml(row.spinGain || REDEEM_SPIN_GAIN), "x Spin | Key ", escapeHtml(row.key), "</span></div>",
         statusBadge(row.status),
         "</div>",
         "<div class=\"za-item-grid\">",
@@ -1112,13 +1116,13 @@
         "<article class=\"za-item\">",
         "<div class=\"za-item-top\">",
         "<div class=\"za-item-title\"><strong>", escapeHtml(row.code), "</strong><span>", escapeHtml(row.name), " (", escapeHtml(row.email), ")</span></div>",
-        "<div class=\"za-badge used\">+", escapeHtml(formatRupiah(row.pointGain)), "</div>",
+        "<div class=\"za-badge used\">+", escapeHtml(row.spinGain || REDEEM_SPIN_GAIN), "x Spin</div>",
         "</div>",
         "<div class=\"za-item-grid\">",
         "<div class=\"za-meta\"><label>ID Redeem</label><span>", escapeHtml(row.redeemId), "</span></div>",
         "<div class=\"za-meta\"><label>UID</label><span>", escapeHtml(row.uid), "</span></div>",
         "<div class=\"za-meta\"><label>Waktu Redeem</label><span>", escapeHtml(formatDateTime(row.redeemedAt)), "</span></div>",
-        "<div class=\"za-meta\"><label>Coin Setelah Redeem</label><span>", escapeHtml(formatRupiah(row.pointBalanceAfter)), "</span></div>",
+        "<div class=\"za-meta\"><label>Coin Saat Redeem</label><span>", escapeHtml(formatRupiah(row.pointBalanceAfter)), "</span></div>",
         "</div>",
         "</article>"
       ].join("");
@@ -1290,6 +1294,7 @@
         code: code,
         active: true,
         pointValue: pointValue,
+        spinGain: REDEEM_SPIN_GAIN,
         status: "new",
         createdAt: now,
         distributed: true,
@@ -1339,6 +1344,7 @@
         code: normalized,
         active: true,
         pointValue: REDEEM_VALUE_RP,
+        spinGain: REDEEM_SPIN_GAIN,
         status: "new",
         createdAt: now,
         distributed: true,
@@ -1356,7 +1362,7 @@
     renderStats();
     renderCodes();
     renderCodeRecap();
-    showToast("Berhasil generate " + generated.length + " kode baru (nominal fix 10 Coin/kode).", "success");
+    showToast("Berhasil generate " + generated.length + " kode baru (reward 1x spin/kode).", "success");
   }
 
   async function toggleCode(codeKeyValue) {

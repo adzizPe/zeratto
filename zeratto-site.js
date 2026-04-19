@@ -1230,13 +1230,16 @@
     const popupValue = document.getElementById("zrLuckyPopupValue");
     if (!section || !wheelContainer || !wheelCircle || !notice || !spinBtn) return;
 
-    const wheelColors = ["#db7093", "#20b2aa", "#d63e92", "#daa520", "#ff34f0", "#ff7f50", "#3cb371", "#4169e1"];
+    const wheelColors = ["#db7093", "#20b2aa", "#d63e92", "#daa520", "#ff34f0", "#ff7f50", "#3cb371", "#4169e1", "#c77dff"];
     let currentRewards = [];
     let gachaState = readStoredGachaState();
     let spinning = false;
     let previewRequestId = 0;
     let popupTimer = 0;
     let wheelRotation = 0;
+    let audioContext = null;
+    let spinSoundTimer = 0;
+    let spinTickDelay = 58;
 
     function getAuthApi() {
       return window.ZerattoAuth && typeof window.ZerattoAuth.spinLuckyDraw === "function"
@@ -1246,14 +1249,25 @@
 
     function createWheelSections(rewards) {
       const board = normalizeLuckyBoardRewards(rewards);
+      const sectionCount = Math.max(1, board.length);
+      const angle = 360 / sectionCount;
       currentRewards = board;
       wheelCircle.innerHTML = "";
+      wheelCircle.style.setProperty("--zr-wheel-count", String(sectionCount));
+      wheelCircle.style.setProperty("--zr-wheel-angle", angle + "deg");
+
+      const gradientStops = board.map(function (_reward, index) {
+        const start = index * angle;
+        const end = start + angle;
+        const color = wheelColors[index % wheelColors.length];
+        return color + " " + start + "deg " + end + "deg";
+      });
+      wheelCircle.style.background = "conic-gradient(from -90deg, " + gradientStops.join(", ") + ")";
       
       board.forEach(function (reward, index) {
         const section = document.createElement("div");
         section.className = "zr-wheel-number";
-        section.style.setProperty("--i", index + 1);
-        section.style.setProperty("--clr", wheelColors[index % wheelColors.length]);
+        section.style.setProperty("--rotate", String((index * angle) + (angle / 2)) + "deg");
         
         const span = document.createElement("span");
         span.textContent = String(Math.max(0, Math.trunc(Number(reward) || 0)));
@@ -1270,7 +1284,8 @@
     }
 
     function updateSectionVisibility() {
-      section.hidden = !(isUserLoggedIn() && gachaState.totalRedeems > 0);
+      const hasActiveSpin = Math.max(0, Math.trunc(Number(gachaState.availableSpins) || 0)) > 0;
+      section.hidden = !(isUserLoggedIn() && (spinning || hasActiveSpin));
     }
 
     function renderGachaSummary() {
@@ -1337,47 +1352,68 @@
       }, 2000);
     }
 
-    function playSpinSound() {
+    function getLuckyAudioContext() {
       try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        
+        const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextCtor) return null;
+        if (!audioContext) audioContext = new AudioContextCtor();
+        if (audioContext.state === "suspended" && typeof audioContext.resume === "function") {
+          audioContext.resume().catch(function () {});
+        }
+        return audioContext;
+      } catch (_err) {}
+      return null;
+    }
+
+    function playLuckyTone(frequency, duration, volume, type) {
+      const ctx = getLuckyAudioContext();
+      if (!ctx) return;
+      try {
+        const now = ctx.currentTime;
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = type || "sine";
+        oscillator.frequency.setValueAtTime(frequency, now);
+        gain.gain.setValueAtTime(Math.max(0.01, volume || 0.05), now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
         oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-        
-        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
-        
-        gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.2);
+        gain.connect(ctx.destination);
+        oscillator.start(now);
+        oscillator.stop(now + duration);
       } catch (_err) {}
     }
 
+    function stopSpinSound() {
+      if (!spinSoundTimer) return;
+      window.clearTimeout(spinSoundTimer);
+      spinSoundTimer = 0;
+    }
+
+    function startSpinSound() {
+      stopSpinSound();
+      spinTickDelay = 58;
+
+      function tick() {
+        if (!spinning) {
+          stopSpinSound();
+          return;
+        }
+
+        playLuckyTone(520 + Math.random() * 180, 0.035, 0.045, "square");
+        spinTickDelay = Math.min(190, spinTickDelay + 4 + Math.random() * 5);
+        spinSoundTimer = window.setTimeout(tick, spinTickDelay);
+      }
+
+      tick();
+    }
+
     function playWinSound() {
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const notes = [800, 1000, 1200];
-        const noteLength = 0.1;
-        
-        notes.forEach(function (freq, i) {
-          const osc = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-          
-          osc.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-          
-          osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * noteLength);
-          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + i * noteLength);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * noteLength + noteLength);
-          
-          osc.start(audioContext.currentTime + i * noteLength);
-          osc.stop(audioContext.currentTime + i * noteLength + noteLength);
-        });
-      } catch (_err) {}
+      const notes = [740, 920, 1160, 1380];
+      notes.forEach(function (freq, index) {
+        window.setTimeout(function () {
+          playLuckyTone(freq, 0.12, 0.09, "triangle");
+        }, index * 88);
+      });
     }
 
     function generateConfetti(container) {
@@ -1451,6 +1487,7 @@
     function finishSpin(targetIndex, rewardLabel, rewardCoin) {
       spinning = false;
       wheelCircle.style.transition = "none";
+      stopSpinSound();
       playWinSound();
       showLuckyPopup(rewardLabel);
       
@@ -1483,7 +1520,7 @@
       spinBtn.disabled = true;
       notice.textContent = "Memutar...";
       hideLuckyPopup(true);
-      playSpinSound();
+      startSpinSound();
 
       const consumeResult = await reserveSpin();
       gachaState = normalizeGachaState(consumeResult && consumeResult.state);
@@ -1491,6 +1528,7 @@
 
       if (!consumeResult || !consumeResult.ok) {
         spinning = false;
+        stopSpinSound();
         syncControls(consumeResult && consumeResult.message ? consumeResult.message : "Lucky draw belum tersedia.");
         return;
       }
@@ -1501,10 +1539,12 @@
 
       const spinsNeeded = 5 + Math.floor(Math.random() * 3);
       const degreesPerSection = 360 / currentRewards.length;
-      const randomExtraSpin = Math.floor(Math.random() * 360);
-      const targetDegrees = (targetIndex * degreesPerSection) + randomExtraSpin + (spinsNeeded * 360);
-      
-      wheelRotation += targetDegrees;
+      const targetCenter = (targetIndex * degreesPerSection) + (degreesPerSection / 2);
+      const normalizedCurrent = ((wheelRotation % 360) + 360) % 360;
+      const desiredNormalized = (360 - targetCenter) % 360;
+      const delta = (desiredNormalized - normalizedCurrent + 360) % 360;
+
+      wheelRotation += delta + (spinsNeeded * 360);
       wheelCircle.style.transition = "transform 5.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
       wheelCircle.style.transform = "rotate(" + wheelRotation + "deg)";
 
@@ -1516,6 +1556,7 @@
     spinBtn.addEventListener("click", function () {
       spinWheel().catch(function () {
         spinning = false;
+        stopSpinSound();
         syncControls("Spin gagal dijalankan. Coba lagi.");
       });
     });
@@ -1545,6 +1586,7 @@
 
     window.addEventListener("userLoggedOut", function () {
       gachaState = normalizeGachaState(null);
+      stopSpinSound();
       hideLuckyPopup(true);
       applyBoardRewards(GACHA_REWARDS);
       syncControls();

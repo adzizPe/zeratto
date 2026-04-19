@@ -26,13 +26,14 @@
   const USER_GACHA_EVENT = "zerattoGachaUpdated";
 
   const CODE_IMPORT_ALLOWLIST = ["anggasrg11@gmail.com"];
-  const DEFAULT_REDEEM_RUPIAH = 10;
+  const DEFAULT_REDEEM_RUPIAH = 0;
+  const REDEEM_SPIN_GAIN = 1;
   const EWALLET_MIN_COIN = 100;
   const EWALLET_RUPIAH_PER_COIN = 10;
   const EWALLET_TYPES = ["DANA", "GoPay", "OVO", "ShopeePay"];
   const PULSA_OPERATORS = ["Telkomsel", "Axis", "XL", "Tri", "IM3", "Smartfren"];
   const DEFAULT_GACHA_REWARD_VALUES = [5, 8, 10, 12, 15, 18, 20, 25, 30];
-  const GACHA_BOARD_SIZE = 8;
+  const GACHA_BOARD_SIZE = 9;
 
   const TUKAR_LABELS = {
     diamond: "Diamond Game",
@@ -645,7 +646,7 @@
   }
 
   function resolveCodePointValue(codeRecord) {
-    // Nominal redeem dikunci: 1 kode = Rp10.
+    // Redeem sekarang hanya membuka tiket spin. Coin diberikan dari hasil lucky draw.
     return DEFAULT_REDEEM_RUPIAH;
   }
 
@@ -673,6 +674,7 @@
 
     base.code = code;
     base.pointValue = toInt(pointValue, DEFAULT_REDEEM_RUPIAH);
+    base.spinGain = REDEEM_SPIN_GAIN;
     base.usedBy = user.uid;
     base.usedByName = user.displayName || "Pengguna Zeratto";
     base.usedByEmail = user.email || "";
@@ -1112,11 +1114,10 @@
     const latest = userRedeems[0] || {};
     const code = String(latest.code || "-");
     const redeemedAt = formatDate(latest.redeemedAt);
-    const pointGain = toInt(latest.pointGain, 0);
     showAlert(
       "zrRedeemMessage",
       "success",
-      "Total klaim akun ini: " + userRedeems.length + " kode. Klaim terakhir: " + code + " | Coin: +" + formatRupiah(pointGain) + " | Spin: " + gachaState.availableSpins + "x | Waktu: " + redeemedAt
+      "Total klaim akun ini: " + userRedeems.length + " kode. Klaim terakhir: " + code + " | Spin tersedia: " + gachaState.availableSpins + "x | Waktu: " + redeemedAt
     );
   }
 
@@ -1272,6 +1273,7 @@
         uid: rowUid,
         code: String(row.code || normalizedCode || "-"),
         pointGain: toInt(row.pointGain, 0),
+        spinGain: toInt(row.spinGain, REDEEM_SPIN_GAIN),
         pointBalanceAfter: toInt(row.pointBalanceAfter, 0),
         redeemedAt: row.redeemedAt,
         redeemId: String(redeemId || row.codeKey || "")
@@ -1425,47 +1427,47 @@
         }
       }
 
-      const pointGain = resolveCodePointValue(codeData);
+      const pointGain = 0;
+      const spinGain = REDEEM_SPIN_GAIN;
       const redeemRef = db.ref(REDEEMS_PATH).push();
 
-      await redeemRef.set({
-        uid: currentUser.uid,
-        code: resolvedCode,
-        codeOriginal: codeRaw,
-        codeKey,
-        pointGain,
-        redeemedAt: firebase.database.ServerValue.TIMESTAMP,
-        name: currentUser.displayName || "Pengguna Zeratto",
-        email: currentUser.email || "",
-        photoURL: currentUser.photoURL || ""
-      });
+      try {
+        await redeemRef.set({
+          uid: currentUser.uid,
+          code: resolvedCode,
+          codeOriginal: codeRaw,
+          codeKey,
+          pointGain,
+          spinGain,
+          redeemedAt: firebase.database.ServerValue.TIMESTAMP,
+          name: currentUser.displayName || "Pengguna Zeratto",
+          email: currentUser.email || "",
+          photoURL: currentUser.photoURL || ""
+        });
+      } catch (saveErr) {
+        await rollbackCodeLock(codeRef, currentUser.uid);
+        throw saveErr;
+      }
 
       try {
-        const pointsRef = db.ref(USERS_PATH + "/" + currentUser.uid + "/points");
-        const pointsTx = await pointsRef.transaction((current) => toInt(current) + pointGain);
-        if (!pointsTx.committed) {
-          throw new Error("Coin tidak berhasil ditambahkan.");
-        }
-
-        currentPoints = toInt(pointsTx.snapshot.val(), 0);
+        currentPoints = await loadUserPoints(currentUser.uid);
         storeCachedUserPoints(currentPoints);
+        updateProfilePointUI(currentPoints);
+        updateTukarPointUI(currentPoints);
         await redeemRef.update({ pointBalanceAfter: currentPoints });
       } catch (pointsErr) {
-        await redeemRef.remove().catch(() => {});
-        await rollbackCodeLock(codeRef, currentUser.uid);
-        throw pointsErr;
+        console.error("[Zeratto Redeem Point Snapshot Error]", pointsErr);
       }
 
       if (input) input.value = "";
       showAlert(
         "zrRedeemMessage",
         "success",
-        "Redeem berhasil. Coin bertambah " + formatRupiah(pointGain) + " dan kamu dapat 1x spin bonus."
+        "Redeem berhasil. Kamu dapat 1x spin."
       );
-      updateTukarPointUI(currentPoints);
       await syncRedeemState(currentUser);
       
-      window.dispatchEvent(new CustomEvent("redeemSuccess", { detail: { pointGain, totalCoins: currentPoints } }));
+      window.dispatchEvent(new CustomEvent("redeemSuccess", { detail: { spinGain, pointGain, totalCoins: currentPoints } }));
     } catch (err) {
       showAlert("zrRedeemMessage", "error", "Terjadi error saat redeem. Coba ulangi lagi.");
       console.error("[Zeratto Redeem Error]", err);
@@ -1738,6 +1740,7 @@
         code,
         active: true,
         pointValue: DEFAULT_REDEEM_RUPIAH,
+        spinGain: REDEEM_SPIN_GAIN,
         createdAt: now,
         status: "new"
       };

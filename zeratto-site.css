@@ -1511,6 +1511,108 @@ body.zr-site-shell::after,
   gap: 12px;
 }
 
+.zr-shopee-section {
+  margin-top: -8px;
+}
+
+.zr-shopee-strip {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+  padding: 14px 16px;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 12% 30%, rgba(255, 255, 255, 0.9), transparent 22%),
+    linear-gradient(135deg, #fff8f2 0%, #ffe4d8 54%, #ffc9ae 100%);
+  color: #2c1b13;
+  text-decoration: none;
+  box-shadow: 0 16px 32px rgba(120, 64, 26, 0.14);
+}
+
+.zr-shopee-strip::before {
+  content: "";
+  position: absolute;
+  inset: -40% auto -40% 62%;
+  width: 180px;
+  transform: rotate(18deg);
+  background: rgba(238, 77, 45, 0.12);
+}
+
+.zr-shopee-mark,
+.zr-shopee-action {
+  position: relative;
+  z-index: 1;
+}
+
+.zr-shopee-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(238, 77, 45, 0.12), 0 10px 20px rgba(238, 77, 45, 0.16);
+}
+
+.zr-shopee-mark img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.zr-shopee-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.zr-shopee-copy small {
+  color: #ee4d2d;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.zr-shopee-copy strong {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.zr-shopee-copy span {
+  color: #6d4b39;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.zr-shopee-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #ee4d2d;
+  color: #ffffff;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 10px 18px rgba(238, 77, 45, 0.24);
+}
+
+.zr-shopee-action svg {
+  width: 16px;
+  height: 16px;
+}
+
 .zr-home-product-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1978,7 +2080,7 @@ body.zr-site-shell::after,
 
 /* Spin Wheel Styles */
 .zr-gacha-machine-wheel {
-  flex-direction: column;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
   gap: 30px;
 }
 
@@ -2000,16 +2102,26 @@ body.zr-site-shell::after,
     0 0 0 8px rgba(48, 30, 20, 0.3),
     0 0 0 12px #fff7ef,
     0 0 40px rgba(255, 165, 100, 0.25);
-  background: #333;
+  background: radial-gradient(circle at center, #2f1d14 0 20%, transparent 20% 100%);
 }
 
 .zr-wheel-circle {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: #333;
+  background: conic-gradient(from -90deg, #db7093 0deg 40deg, #20b2aa 40deg 80deg, #d63e92 80deg 120deg, #daa520 120deg 160deg, #ff34f0 160deg 200deg, #ff7f50 200deg 240deg, #3cb371 240deg 280deg, #4169e1 280deg 320deg, #c77dff 320deg 360deg);
   transition: transform 5.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   transform-origin: center;
+  overflow: hidden;
+}
+
+.zr-wheel-circle::after {
+  content: "";
+  position: absolute;
+  inset: 17%;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(47, 29, 20, 0.98), rgba(32, 19, 14, 0.96));
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
 }
 
 .zr-wheel-pointer {
@@ -2028,34 +2140,42 @@ body.zr-site-shell::after,
 
 .zr-wheel-number {
   position: absolute;
-  width: 50%;
-  height: 50%;
-  background: var(--clr);
-  transform-origin: bottom right;
-  transform: rotate(calc(45deg * var(--i)));
-  clip-path: polygon(0 0, 56% 0, 100% 100%, 0 56%);
+  inset: 0;
+  transform: rotate(var(--rotate));
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   user-select: none;
+  pointer-events: none;
 }
 
 .zr-wheel-number span {
-  position: relative;
-  transform: rotate(45deg);
-  font-size: 1.4em;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(calc(-1 * var(--rotate)));
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 4px 6px;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #fff;
-  text-shadow: 3px 5px 2px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   font-family: "Bricolage Grotesque", sans-serif;
+  line-height: 1;
 }
 
 .zr-wheel-number span::after {
   content: " Coin";
-  position: absolute;
-  font-size: 0.5em;
-  font-weight: 500;
+  display: block;
+  margin-top: 4px;
+  font-size: 0.56rem;
+  font-weight: 700;
   white-space: nowrap;
+  letter-spacing: 0.03em;
 }
 
 .zr-spin-btn {
@@ -2360,16 +2480,16 @@ body.zr-site-shell::after,
 }
 
 .zr-ewallet-tab-logo--shopeepay {
-  background: #fff8f3;
+  background: transparent;
+  padding: 0;
 }
 
 .zr-ewallet-tab-logo--shopeepay img {
-  width: 96px;
-  max-width: none;
-  max-height: none;
-  height: 40px;
-  object-fit: cover;
-  object-position: 16% 51%;
+  width: 70px;
+  max-width: 100%;
+  max-height: 40px;
+  height: auto;
+  object-fit: contain;
 }
 
 .zr-ewallet-tab.is-active {
@@ -3719,6 +3839,18 @@ body.zr-site-shell::after,
     grid-template-columns: 1fr;
   }
 
+  .zr-shopee-strip {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .zr-shopee-action {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    min-height: 42px;
+  }
+
   .zr-home-product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px;
@@ -3832,8 +3964,8 @@ body.zr-site-shell::after,
   }
 
   .zr-ewallet-tab-logo--shopeepay img {
-    width: 82px;
-    height: 34px;
+    width: 64px;
+    height: auto;
   }
 
   .zr-diamond-summary-grid,
@@ -4081,6 +4213,22 @@ body.zr-site-shell[data-zr-theme="dark"] .zr-diamond-intro-card {
     var(--site-dark-surface-3),
     var(--site-dark-surface-2)
   );
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-shopee-strip {
+  background:
+    radial-gradient(circle at 12% 30%, rgba(255, 197, 151, 0.16), transparent 24%),
+    linear-gradient(135deg, #2c1a13 0%, #3a2117 55%, #5b2b1e 100%);
+  color: #fff7ef;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.26);
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-shopee-mark {
+  background: rgba(255, 247, 239, 0.94);
+}
+
+body.zr-site-shell[data-zr-theme="dark"] .zr-shopee-copy span {
+  color: rgba(255, 239, 226, 0.76);
 }
 
 body.zr-site-shell[data-zr-theme="dark"] .zr-tukar-modal-card {
