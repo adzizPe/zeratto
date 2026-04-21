@@ -504,6 +504,12 @@
     }).length;
   }
 
+  function formatLuckySource(source) {
+    return String(source || "").toLowerCase() === "forced"
+      ? "Diatur admin"
+      : "Acak otomatis";
+  }
+
   function codesData() {
     return entriesSafe(state.codesMap).map(function (entry) {
       const key = entry[0];
@@ -745,14 +751,14 @@
         "<div class=\"za-meta\"><label>UID</label><span>", escapeHtml(row.uid), "</span></div>",
         "<div class=\"za-meta\"><label>Last Login</label><span>", escapeHtml(formatDateTime(row.lastLoginAt)), "</span></div>",
         "<div class=\"za-meta\"><label>Coin Saat Ini</label><span>", escapeHtml(formatRupiah(row.points)), "</span></div>",
-        "<div class=\"za-meta\"><label>Lucky Draw</label><span>", escapeHtml(luckyConfig.hasCustomRewards ? "Custom" : "Default"), " | Spin ", escapeHtml(String(luckySpinCount)), "x</span></div>",
+        "<div class=\"za-meta\"><label>Spin Wheel</label><span>", escapeHtml(luckyConfig.hasCustomRewards ? "Khusus" : "Default"), " | Sudah spin ", escapeHtml(String(luckySpinCount)), "x</span></div>",
         "</div>",
         "<div class=\"za-user-points\">",
         "<input type=\"number\" min=\"0\" step=\"1\" value=\"100\" class=\"za-point-input\" title=\"Jumlah coin\">",
         "<button type=\"button\" data-user-action=\"add\" data-uid=\"", escapeHtml(row.uid), "\">+ Coin</button>",
         "<button type=\"button\" data-user-action=\"sub\" data-uid=\"", escapeHtml(row.uid), "\" class=\"danger\">- Coin</button>",
         "<button type=\"button\" data-user-action=\"set\" data-uid=\"", escapeHtml(row.uid), "\" class=\"neutral\">Set Coin</button>",
-        "<button type=\"button\" data-user-action=\"lucky\" data-uid=\"", escapeHtml(row.uid), "\" class=\"neutral\">Atur Lucky</button>",
+        "<button type=\"button\" data-user-action=\"lucky\" data-uid=\"", escapeHtml(row.uid), "\" class=\"neutral\">Atur Spin</button>",
         "</div>",
         "</article>"
       ].join("");
@@ -768,6 +774,8 @@
     const metaEl = byId("zaLuckyUserMeta");
     const rewardsInput = byId("zaLuckyUserRewards");
     const queueInput = byId("zaLuckyUserQueue");
+    const rewardModeEl = byId("zaLuckyUserRewardMode");
+    const queueModeEl = byId("zaLuckyUserQueueMode");
     if (!defaultInput || !defaultPreview || !emptyEl || !editor || !nameEl || !metaEl || !rewardsInput || !queueInput) return;
 
     const defaultRewards = getDefaultLuckyRewards();
@@ -788,6 +796,16 @@
     metaEl.textContent = selectedUid + " | " + String(userRow.email || "-");
     rewardsInput.value = config.hasCustomRewards ? config.rewardsRaw.join(", ") : "";
     queueInput.value = config.hasForcedQueue ? config.forcedQueueRaw.join(", ") : "";
+    if (rewardModeEl) {
+      rewardModeEl.textContent = config.hasCustomRewards
+        ? "Khusus user ini"
+        : "Ikut default";
+    }
+    if (queueModeEl) {
+      queueModeEl.textContent = config.hasForcedQueue
+        ? "Berikutnya " + formatRupiah(config.forcedQueue[0] || config.forcedQueueRaw[0])
+        : "Acak otomatis";
+    }
 
     emptyEl.hidden = true;
     editor.hidden = false;
@@ -890,6 +908,106 @@
     });
   }
 
+  function buildRedeemLookupByCode() {
+    const lookup = new Map();
+    redeemsData().forEach(function (row) {
+      const code = normalizeCode(row.code);
+      if (!code) return;
+      const existing = lookup.get(code);
+      if (!existing || parseTimestamp(row.redeemedAt) > parseTimestamp(existing.redeemedAt)) {
+        lookup.set(code, row);
+      }
+    });
+    return lookup;
+  }
+
+  function buildUsedCodeRecapRows(dateFilterYmd) {
+    const redeemLookup = buildRedeemLookupByCode();
+    const rows = codesData().filter(function (row) {
+      return String(row.usedBy || "").trim() || row.status === "used";
+    }).map(function (row) {
+      const code = normalizeCode(row.code || row.key);
+      const redeemRow = redeemLookup.get(code) || {};
+      const usedAt = parseTimestamp(row.usedAt || redeemRow.redeemedAt);
+      const issuedAt = parseTimestamp(row.distributedAt || row.createdAt || row.usedAt);
+      const usedByName = String(
+        row.usedByName ||
+        (redeemRow.name && redeemRow.name !== "-" ? redeemRow.name : "") ||
+        "Pengguna Zeratto"
+      );
+      const usedByEmail = String(
+        row.usedByEmail ||
+        (redeemRow.email && redeemRow.email !== "-" ? redeemRow.email : "") ||
+        "-"
+      );
+      const usedByUid = String(row.usedBy || redeemRow.uid || "-");
+      const spinGain = toInt(row.spinGain || redeemRow.spinGain, REDEEM_SPIN_GAIN);
+
+      return {
+        code: code,
+        usedByName: usedByName,
+        usedByEmail: usedByEmail,
+        usedByUid: usedByUid,
+        usedAt: usedAt,
+        issuedAt: issuedAt,
+        issuedYmd: toYmd(issuedAt),
+        usedYmd: toYmd(usedAt),
+        rewardLabel: spinGain + "x Spin"
+      };
+    }).filter(function (row) {
+      if (!row.code) return false;
+      if (!dateFilterYmd) return true;
+      return row.issuedYmd === dateFilterYmd;
+    });
+
+    return rows.sort(function (a, b) {
+      return b.usedAt - a.usedAt || a.code.localeCompare(b.code);
+    });
+  }
+
+  function renderUsedCodeRecap(dateFilterYmd) {
+    const tbody = byId("zaUsedCodeRecapBody");
+    const emptyEl = byId("zaUsedCodeRecapEmpty");
+    const limitHintEl = byId("zaUsedCodeRecapLimitHint");
+    const countEl = byId("zaUsedCodeCount");
+    if (!tbody || !emptyEl) return;
+
+    const rows = buildUsedCodeRecapRows(dateFilterYmd);
+    if (countEl) countEl.textContent = rows.length + " data";
+
+    const MAX_RENDER = 700;
+    const renderRows = rows.slice(0, MAX_RENDER);
+    if (!renderRows.length) {
+      tbody.innerHTML = "";
+      emptyEl.hidden = false;
+      if (limitHintEl) limitHintEl.hidden = true;
+      return;
+    }
+
+    emptyEl.hidden = true;
+    tbody.innerHTML = renderRows.map(function (row) {
+      return [
+        "<tr>",
+        "<td>", escapeHtml(row.code), "</td>",
+        "<td>", escapeHtml(row.usedByName), "</td>",
+        "<td>", escapeHtml(row.usedByEmail), "</td>",
+        "<td>", escapeHtml(row.usedByUid), "</td>",
+        "<td>", escapeHtml(formatDateTime(row.usedAt)), "</td>",
+        "<td>", escapeHtml(row.rewardLabel), "</td>",
+        "</tr>"
+      ].join("");
+    }).join("");
+
+    if (limitHintEl) {
+      if (rows.length > renderRows.length) {
+        limitHintEl.hidden = false;
+        limitHintEl.textContent = "Menampilkan " + renderRows.length + " dari " + rows.length + " kode terpakai terbaru. Gunakan filter tanggal terbit kode untuk mempersempit.";
+      } else {
+        limitHintEl.hidden = true;
+      }
+    }
+  }
+
   function csvCell(value) {
     const safe = String(value === null || typeof value === "undefined" ? "" : value);
     if (!/[",\r\n]/.test(safe)) return safe;
@@ -935,6 +1053,7 @@
     });
     const totalIn = rows.filter(function (row) { return row.statusIn; }).length;
     const totalOut = rows.filter(function (row) { return row.statusOut; }).length;
+    renderUsedCodeRecap(filterYmd);
 
     dateLabelEl.textContent = filterYmd ? formatDateOnly(ymdToLocalDate(filterYmd)) : "Semua Tanggal";
     totalCodesEl.textContent = String(validRows.length);
@@ -1162,12 +1281,12 @@
         "<div class=\"za-item-grid\">",
         "<div class=\"za-meta\"><label>UID</label><span>", escapeHtml(row.uid), "</span></div>",
         "<div class=\"za-meta\"><label>Waktu Spin</label><span>", escapeHtml(formatDateTime(row.spinAt)), "</span></div>",
-        "<div class=\"za-meta\"><label>Sumber</label><span>", escapeHtml(row.source), "</span></div>",
+        "<div class=\"za-meta\"><label>Cara Hasil</label><span>", escapeHtml(formatLuckySource(row.source)), "</span></div>",
         "<div class=\"za-meta\"><label>Spin Sisa</label><span>", escapeHtml(String(row.remainingSpins)), "x</span></div>",
         "<div class=\"za-meta\"><label>Total Redeem</label><span>", escapeHtml(String(row.totalRedeems)), "x</span></div>",
         "<div class=\"za-meta\"><label>Coin Setelah Spin</label><span>", escapeHtml(formatRupiah(row.pointsAfter)), "</span></div>",
         "</div>",
-        "<div class=\"za-detail\"><div class=\"za-detail-row\"><span>Board</span><span>", escapeHtml(row.boardRewards.join(" | ")), "</span></div></div>",
+        "<div class=\"za-detail\"><div class=\"za-detail-row\"><span>Isi Roda</span><span>", escapeHtml(row.boardRewards.join(" | ")), "</span></div></div>",
         "</article>"
       ].join("");
     }).join("");
@@ -1400,7 +1519,7 @@
     const input = byId("zaLuckyDefaultRewards");
     const rewards = parseRewardInput(input ? input.value : "");
     if (!rewards.length) {
-      showToast("Masukkan hadiah default yang valid.", "error");
+      showToast("Isi hadiah default dengan angka coin. Contoh: 5, 10, 20.", "error");
       return;
     }
 
@@ -1414,7 +1533,7 @@
     state.gachaConfigMap = state.gachaConfigMap && typeof state.gachaConfigMap === "object" ? state.gachaConfigMap : {};
     state.gachaConfigMap.defaults = payload;
     renderLuckyConfigPanel();
-    showToast("Hadiah default lucky draw berhasil disimpan.", "success");
+    showToast("Hadiah default Spin Wheel berhasil disimpan.", "success");
   }
 
   async function saveLuckyUserConfig() {
@@ -1437,7 +1556,7 @@
       }
       renderUsers();
       renderLuckyConfigPanel();
-      showToast("Setting user direset ke default.", "success");
+      showToast("User ini kembali memakai hadiah default.", "success");
       return;
     }
 
@@ -1454,7 +1573,7 @@
     state.gachaConfigMap.users[key] = payload;
     renderUsers();
     renderLuckyConfigPanel();
-    showToast("Setting lucky draw user berhasil disimpan.", "success");
+    showToast("Pengaturan Spin Wheel user berhasil disimpan.", "success");
   }
 
   async function resetLuckyUserConfig() {
@@ -1470,7 +1589,7 @@
     }
     renderUsers();
     renderLuckyConfigPanel();
-    showToast("Setting lucky draw user berhasil dihapus.", "success");
+    showToast("Pengaturan Spin Wheel user kembali ke default.", "success");
   }
 
   async function handleLogin(event) {
@@ -1739,7 +1858,7 @@
         if (action === "lucky") {
           state.selectedLuckyUid = uid;
           renderLuckyConfigPanel();
-          showToast("User lucky draw dipilih.", "success");
+          showToast("User dipilih untuk atur Spin Wheel.", "success");
           return;
         }
         const item = btn.closest(".za-item");

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../zeratto-admin.css?v=20260417_1">
+  <link rel="stylesheet" href="../../zeratto-admin.css?v=20260421_2">
 </head>
 <body class="za-body">
   <div class="za-app" id="zaApp">
@@ -89,20 +89,42 @@
 
           <section class="za-card">
             <div class="za-card-head">
-              <h2>Setting Lucky Draw</h2>
+              <h2>Pengaturan Spin Wheel</h2>
+            </div>
+
+            <div class="za-lucky-guide">
+              <div class="za-lucky-guide-step">
+                <span>1</span>
+                <strong>Kode redeem valid</strong>
+                <p>Setiap kode valid memberi user 1x kesempatan spin.</p>
+              </div>
+              <div class="za-lucky-guide-step">
+                <span>2</span>
+                <strong>Hadiah default</strong>
+                <p>Daftar coin yang akan muncul dan diacak di roda.</p>
+              </div>
+              <div class="za-lucky-guide-step">
+                <span>3</span>
+                <strong>Atur user khusus</strong>
+                <p>Pilih user jika mau menentukan hadiah khusus atau hasil spin berikutnya.</p>
+              </div>
             </div>
 
             <div class="za-lucky-editor">
               <label class="za-form-block" for="zaLuckyDefaultRewards">
-                Hadiah default
+                Hadiah coin yang muncul di roda untuk semua user
                 <textarea id="zaLuckyDefaultRewards" rows="3" placeholder="5, 8, 10, 12, 15, 18, 20, 25, 30"></textarea>
+                <small>Tulis angka coin dan pisahkan dengan koma. Contoh: 5, 10, 20, 30.</small>
               </label>
+              <div class="za-lucky-helper za-lucky-helper--default">
+                Hadiah default aktif: <strong id="zaLuckyDefaultPreview">-</strong>
+              </div>
               <div class="za-inline">
-                <button type="button" id="zaSaveLuckyDefaultBtn">Simpan Default</button>
+                <button type="button" id="zaSaveLuckyDefaultBtn">Simpan Hadiah Default</button>
               </div>
             </div>
 
-            <div id="zaLuckyUserEmpty" class="za-empty">Pilih user dulu dari daftar sebelah untuk atur lucky draw khusus user itu.</div>
+            <div id="zaLuckyUserEmpty" class="za-empty">Pilih tombol "Atur Spin" pada salah satu user di daftar sebelah untuk mengatur spin khusus user itu.</div>
 
             <div id="zaLuckyUserEditor" class="za-lucky-editor" hidden>
               <div class="za-lucky-user-head">
@@ -110,23 +132,32 @@
                 <span id="zaLuckyUserMeta">-</span>
               </div>
 
-              <div class="za-lucky-helper">
-                Default aktif: <strong id="zaLuckyDefaultPreview">-</strong>
+              <div class="za-lucky-status-grid">
+                <div class="za-lucky-status-card">
+                  <span>Mode hadiah user</span>
+                  <strong id="zaLuckyUserRewardMode">Ikut default</strong>
+                </div>
+                <div class="za-lucky-status-card">
+                  <span>Hasil spin berikutnya</span>
+                  <strong id="zaLuckyUserQueueMode">Acak</strong>
+                </div>
               </div>
 
               <label class="za-form-block" for="zaLuckyUserRewards">
-                Hadiah khusus user
+                Hadiah khusus user ini (opsional)
                 <textarea id="zaLuckyUserRewards" rows="3" placeholder="Kosongkan untuk pakai default"></textarea>
+                <small>Isi kalau user ini ingin punya daftar hadiah berbeda. Kosongkan jika ingin tetap mengikuti hadiah default.</small>
               </label>
 
               <label class="za-form-block" for="zaLuckyUserQueue">
-                Antrian hasil berikutnya
+                Paksa hasil spin berikutnya (opsional)
                 <input id="zaLuckyUserQueue" type="text" placeholder="Contoh: 20, 30, 25">
+                <small>Isi 1 angka untuk menentukan spin berikutnya. Isi beberapa angka untuk urutan beberapa spin berikutnya.</small>
               </label>
 
               <div class="za-inline">
-                <button type="button" id="zaSaveLuckyUserBtn">Simpan User</button>
-                <button type="button" id="zaResetLuckyUserBtn" class="neutral">Reset User</button>
+                <button type="button" id="zaSaveLuckyUserBtn">Simpan Pengaturan User</button>
+                <button type="button" id="zaResetLuckyUserBtn" class="neutral">Kembalikan ke Default</button>
               </div>
             </div>
           </section>
@@ -186,6 +217,12 @@
             <div class="za-recap-pill">Status Out: <strong id="zaRecapTotalOut">0</strong></div>
           </div>
 
+          <div class="za-recap-help">
+            <strong>Penjelasan Rekapan</strong>
+            <p><b>Status In</b> berarti kode sudah masuk daftar kode voucher admin. <b>Status Out</b> berarti kode tersebut sudah dipakai/diredeem user.</p>
+            <p>Tabel 5 kolom di bawah berisi kode yang masih valid untuk dibagikan. Tabel "Kode Sudah Terpakai" menampilkan kode yang sudah redeem, user, email/UID, dan tanggal redeem. Filter tanggal tetap berdasarkan tanggal terbit kode.</p>
+          </div>
+
           <p class="za-recap-note" id="zaSundayReminder">
             Reminder admin: kirim rekap ini ke admin setiap hari Minggu.
           </p>
@@ -206,6 +243,28 @@
           </div>
           <div class="za-empty" id="zaCodeRecapEmpty" hidden>Belum ada kode redeem valid untuk filter ini.</div>
           <div class="za-empty" id="zaCodeRecapLimitHint" hidden></div>
+
+          <div class="za-section-subhead">
+            <h3>Kode Sudah Terpakai</h3>
+            <span id="zaUsedCodeCount">0 data</span>
+          </div>
+          <div class="za-table-wrap za-used-code-wrap">
+            <table class="za-table za-used-code-table">
+              <thead>
+                <tr>
+                  <th>Kode Redeem</th>
+                  <th>Diredeem Oleh</th>
+                  <th>Email</th>
+                  <th>UID</th>
+                  <th>Tanggal Redeem</th>
+                  <th>Reward</th>
+                </tr>
+              </thead>
+              <tbody id="zaUsedCodeRecapBody"></tbody>
+            </table>
+          </div>
+          <div class="za-empty" id="zaUsedCodeRecapEmpty" hidden>Belum ada kode yang sudah terpakai untuk filter ini.</div>
+          <div class="za-empty" id="zaUsedCodeRecapLimitHint" hidden></div>
         </section>
       </section>
 
@@ -220,8 +279,8 @@
 
         <section class="za-card">
           <div class="za-card-head">
-            <h2>Riwayat Lucky Draw</h2>
-            <input id="zaLuckySpinSearch" type="search" placeholder="Cari user/reward/uid">
+            <h2>Riwayat Spin Wheel</h2>
+            <input id="zaLuckySpinSearch" type="search" placeholder="Cari user/coin/uid">
           </div>
           <div id="zaLuckySpinHistory" class="za-list compact"></div>
         </section>
@@ -233,6 +292,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="../../zeratto-admin.js?v=20260420_1" defer></script>
+  <script src="../../zeratto-admin.js?v=20260421_2" defer></script>
 </body>
 </html>
