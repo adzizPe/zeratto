@@ -1098,7 +1098,7 @@
       clearCachedUserGachaState();
       setRedeemFormEnabled(false);
       showAlert("zrRedeemMessage", "info", "Login Google dulu agar bisa melakukan redeem.");
-      return;
+      return buildGachaState(0, 0);
     }
 
     const snap = await db.ref(REDEEMS_PATH).once("value");
@@ -1108,7 +1108,7 @@
     setRedeemFormEnabled(true);
     if (!userRedeems.length) {
       hideAlert("zrRedeemMessage");
-      return;
+      return gachaState;
     }
 
     const latest = userRedeems[0] || {};
@@ -1119,6 +1119,7 @@
       "success",
       "Total klaim akun ini: " + userRedeems.length + " kode. Klaim terakhir: " + code + " | Spin tersedia: " + gachaState.availableSpins + "x | Waktu: " + redeemedAt
     );
+    return gachaState;
   }
 
   async function spinLuckyDraw() {
@@ -1465,9 +1466,16 @@
         "success",
         "Redeem berhasil. Kamu dapat 1x spin."
       );
-      await syncRedeemState(currentUser);
+      const latestGachaState = await syncRedeemState(currentUser);
       
-      window.dispatchEvent(new CustomEvent("redeemSuccess", { detail: { spinGain, pointGain, totalCoins: currentPoints } }));
+      window.dispatchEvent(new CustomEvent("redeemSuccess", {
+        detail: {
+          spinGain,
+          pointGain,
+          totalCoins: currentPoints,
+          gachaState: latestGachaState
+        }
+      }));
     } catch (err) {
       showAlert("zrRedeemMessage", "error", "Terjadi error saat redeem. Coba ulangi lagi.");
       console.error("[Zeratto Redeem Error]", err);

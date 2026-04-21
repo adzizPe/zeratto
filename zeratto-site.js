@@ -1288,6 +1288,32 @@
       section.hidden = !(isUserLoggedIn() && (spinning || hasActiveSpin));
     }
 
+    function buildRedeemFallbackState(detail) {
+      const spinGain = Math.max(0, Math.trunc(Number(detail && detail.spinGain) || 0));
+      const currentTotal = Math.max(0, Math.trunc(Number(gachaState.totalRedeems) || 0));
+      const currentUsed = Math.max(0, Math.trunc(Number(gachaState.usedSpins) || 0));
+      const currentAvailable = Math.max(0, Math.trunc(Number(gachaState.availableSpins) || 0));
+
+      if (spinGain <= 0) return normalizeGachaState(gachaState);
+
+      const nextTotal = Math.max(currentTotal + spinGain, currentUsed + currentAvailable + spinGain, spinGain);
+      const nextUsed = Math.min(nextTotal, currentUsed);
+      return normalizeGachaState({
+        totalRedeems: nextTotal,
+        usedSpins: nextUsed
+      });
+    }
+
+    function resolveRedeemSuccessState(detail) {
+      const directState = normalizeGachaState(detail && detail.gachaState);
+      if (directState.availableSpins > 0) return directState;
+
+      const storedState = readStoredGachaState();
+      if (storedState.availableSpins > 0) return storedState;
+
+      return buildRedeemFallbackState(detail);
+    }
+
     function renderGachaSummary() {
       if (spinValue) spinValue.textContent = String(gachaState.availableSpins || 0) + "x";
       if (redeemValue) redeemValue.textContent = String(gachaState.totalRedeems || 0) + "x";
@@ -1600,11 +1626,11 @@
     }
 
     window.addEventListener("redeemSuccess", function (event) {
-      scrollToLuckyDraw();
-      gachaState = readStoredGachaState();
-      updateSectionVisibility();
-      syncControls();
+      const detail = event && event.detail ? event.detail : {};
+      gachaState = resolveRedeemSuccessState(detail);
+      syncControls(gachaState.availableSpins > 0 ? "Spin " + gachaState.availableSpins + "x" : undefined);
       loadBoardPreview().catch(function () {});
+      scrollToLuckyDraw();
     });
 
     if (popup) {
