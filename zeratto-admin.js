@@ -241,6 +241,29 @@
     return normalizeRewardList(values, DEFAULT_GACHA_REWARD_VALUES, 200).join(", ");
   }
 
+  function buildWheelRewardSlots(values, forcedReward) {
+    const pool = normalizeRewardList(values, DEFAULT_GACHA_REWARD_VALUES, 200);
+    const fallback = normalizeRewardList(DEFAULT_GACHA_REWARD_VALUES, DEFAULT_GACHA_REWARD_VALUES, GACHA_BOARD_SIZE);
+    const board = pool.slice(0, GACHA_BOARD_SIZE);
+    let fallbackIndex = 0;
+
+    while (board.length < GACHA_BOARD_SIZE) {
+      board.push(fallback[fallbackIndex % fallback.length] || DEFAULT_GACHA_REWARD_VALUES[0]);
+      fallbackIndex += 1;
+    }
+
+    const safeForcedReward = toInt(forcedReward, 0);
+    if (safeForcedReward > 0 && board.indexOf(safeForcedReward) < 0) {
+      board[board.length - 1] = safeForcedReward;
+    }
+
+    return board;
+  }
+
+  function formatWheelRewardSlots(values, forcedReward) {
+    return buildWheelRewardSlots(values, forcedReward).join(", ");
+  }
+
   function userConfigKey(uid) {
     return String(uid || "").trim().replace(/[.#$/[\]]/g, "_");
   }
@@ -780,7 +803,7 @@
 
     const defaultRewards = getDefaultLuckyRewards();
     defaultInput.value = formatRewardList(defaultRewards);
-    defaultPreview.textContent = formatRewardList(defaultRewards);
+    defaultPreview.textContent = formatWheelRewardSlots(defaultRewards);
 
     const selectedUid = String(state.selectedLuckyUid || "");
     if (!selectedUid || !state.usersMap[selectedUid]) {
@@ -1533,7 +1556,7 @@
     state.gachaConfigMap = state.gachaConfigMap && typeof state.gachaConfigMap === "object" ? state.gachaConfigMap : {};
     state.gachaConfigMap.defaults = payload;
     renderLuckyConfigPanel();
-    showToast("Hadiah default Spin Wheel berhasil disimpan.", "success");
+    showToast("Hadiah default tersimpan: " + formatWheelRewardSlots(rewards), "success");
   }
 
   async function saveLuckyUserConfig() {
@@ -1735,6 +1758,14 @@
           console.error("[Zeratto Admin Lucky Default Error]", err);
           showToast("Gagal simpan hadiah default.", "error");
         });
+      });
+    }
+
+    const luckyDefaultInput = byId("zaLuckyDefaultRewards");
+    if (luckyDefaultInput) {
+      luckyDefaultInput.addEventListener("input", function () {
+        const preview = byId("zaLuckyDefaultPreview");
+        if (preview) preview.textContent = formatWheelRewardSlots(luckyDefaultInput.value);
       });
     }
 

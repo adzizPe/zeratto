@@ -322,14 +322,18 @@
 
   function buildLuckyDrawBoardValues(rewardPool, forcedReward) {
     const pool = normalizeGachaRewardList(rewardPool, DEFAULT_GACHA_REWARD_VALUES, 120);
-    const board = [];
-    for (let index = 0; index < GACHA_BOARD_SIZE; index += 1) {
-      board.push(pool[Math.floor(Math.random() * pool.length)]);
+    const fallback = normalizeGachaRewardList(DEFAULT_GACHA_REWARD_VALUES, DEFAULT_GACHA_REWARD_VALUES, GACHA_BOARD_SIZE);
+    const board = pool.slice(0, GACHA_BOARD_SIZE);
+    let fallbackIndex = 0;
+
+    while (board.length < GACHA_BOARD_SIZE) {
+      board.push(fallback[fallbackIndex % fallback.length] || DEFAULT_GACHA_REWARD_VALUES[0]);
+      fallbackIndex += 1;
     }
 
     const safeForcedReward = toInt(forcedReward, 0);
     if (safeForcedReward > 0 && board.indexOf(safeForcedReward) < 0) {
-      board[Math.floor(Math.random() * board.length)] = safeForcedReward;
+      board[board.length - 1] = safeForcedReward;
     }
 
     return board;

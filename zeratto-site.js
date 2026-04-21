@@ -266,10 +266,12 @@
         return value > 0;
       });
     const pool = normalized.length ? normalized : GACHA_REWARDS.slice();
-    const board = [];
+    const board = pool.slice(0, 9);
+    let fallbackIndex = 0;
 
-    for (let index = 0; index < 8; index += 1) {
-      board.push(pool[index % pool.length]);
+    while (board.length < 9) {
+      board.push(GACHA_REWARDS[fallbackIndex % GACHA_REWARDS.length]);
+      fallbackIndex += 1;
     }
 
     return board;
