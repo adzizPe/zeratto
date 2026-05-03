@@ -54,6 +54,7 @@
   const APP_LOGIN_POLL_MS = 250;
   const APP_LOGIN_TIMEOUT_MS = 12000;
   let gisScriptPromise = null;
+  const alertTimers = {};
 
   function byId(id) {
     return document.getElementById(id);
@@ -759,14 +760,28 @@
   function showAlert(id, type, message) {
     const el = byId(id);
     if (!el) return;
-    el.className = "zr-alert " + type;
+    if (alertTimers[id]) {
+      window.clearTimeout(alertTimers[id]);
+      alertTimers[id] = 0;
+    }
+    const floatingClass = id === "zrTukarMessage" && type === "success" ? " zr-alert-floating" : "";
+    el.className = "zr-alert " + type + floatingClass;
     el.textContent = message;
     el.hidden = false;
+    if (floatingClass) {
+      alertTimers[id] = window.setTimeout(function () {
+        hideAlert(id);
+      }, 3600);
+    }
   }
 
   function hideAlert(id) {
     const el = byId(id);
     if (!el) return;
+    if (alertTimers[id]) {
+      window.clearTimeout(alertTimers[id]);
+      alertTimers[id] = 0;
+    }
     el.hidden = true;
     el.textContent = "";
   }

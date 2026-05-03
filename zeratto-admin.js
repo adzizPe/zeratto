@@ -782,6 +782,7 @@
         "<button type=\"button\" data-user-action=\"sub\" data-uid=\"", escapeHtml(row.uid), "\" class=\"danger\">- Coin</button>",
         "<button type=\"button\" data-user-action=\"set\" data-uid=\"", escapeHtml(row.uid), "\" class=\"neutral\">Set Coin</button>",
         "<button type=\"button\" data-user-action=\"lucky\" data-uid=\"", escapeHtml(row.uid), "\" class=\"neutral\">Atur Spin</button>",
+        "<button type=\"button\" data-user-action=\"delete\" data-uid=\"", escapeHtml(row.uid), "\" class=\"danger\">Hapus</button>",
         "</div>",
         "</article>"
       ].join("");
@@ -1414,6 +1415,33 @@
     return nextPoints;
   }
 
+  async function deleteUser(uid) {
+    const safeUid = String(uid || "").trim();
+    if (!safeUid) throw new Error("UID user kosong.");
+
+    const row = state.usersMap[safeUid] && typeof state.usersMap[safeUid] === "object" ? state.usersMap[safeUid] : {};
+    const label = String(row.name || row.email || safeUid);
+    const confirmed = window.confirm(
+      "Hapus user " + label + "?\n\nData akun, coin, riwayat pengajuan per user, dan setting spin khusus user ini akan dihapus dari daftar admin. Riwayat utama request/redeem tetap disimpan untuk audit."
+    );
+    if (!confirmed) return false;
+
+    const configKey = userConfigKey(safeUid);
+    const updates = {};
+    updates[PATH_USERS + "/" + safeUid] = null;
+    updates[PATH_EXCHANGE_BY_USER + "/" + safeUid] = null;
+    updates[PATH_GACHA_CONFIG + "/users/" + configKey] = null;
+    await adminDb.ref().update(updates);
+
+    if (state.usersMap[safeUid]) delete state.usersMap[safeUid];
+    if (state.selectedLuckyUid === safeUid) state.selectedLuckyUid = "";
+    if (state.gachaConfigMap.users && state.gachaConfigMap.users[configKey]) {
+      delete state.gachaConfigMap.users[configKey];
+    }
+
+    return true;
+  }
+
   async function importCodes() {
     const raw = String(byId("zaCodeTextarea").value || "");
     const pointValue = REDEEM_VALUE_RP;
@@ -1890,6 +1918,25 @@
           state.selectedLuckyUid = uid;
           renderLuckyConfigPanel();
           showToast("User dipilih untuk atur Spin Wheel.", "success");
+          return;
+        }
+        if (action === "delete") {
+          if (!uid) return;
+          btn.disabled = true;
+          try {
+            const deleted = await deleteUser(uid);
+            if (deleted) {
+              renderStats();
+              renderUsers();
+              renderLuckyConfigPanel();
+              showToast("User berhasil dihapus.", "success");
+            }
+          } catch (err) {
+            console.error("[Zeratto Admin Delete User Error]", err);
+            showToast("Gagal hapus user.", "error");
+          } finally {
+            btn.disabled = false;
+          }
           return;
         }
         const item = btn.closest(".za-item");

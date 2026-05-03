@@ -3867,6 +3867,21 @@ body.zr-site-shell::after,
   animation: zrNoticeRise 0.24s ease;
 }
 
+.zr-tukar-modal-card #zrTukarMessage.zr-alert-floating {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1200;
+  width: min(88vw, 430px);
+  max-width: calc(100vw - 28px);
+  min-height: 96px;
+  margin: 0;
+  padding: 18px 18px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 26px 70px rgba(18, 11, 8, 0.38);
+  animation: zrNoticePopCenter 0.26s ease;
+}
+
 .zr-tukar-modal-card #zrTukarMessage::before {
   display: inline-flex;
   align-items: center;
@@ -3905,6 +3920,17 @@ body.zr-site-shell::after,
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes zrNoticePopCenter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -44%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
