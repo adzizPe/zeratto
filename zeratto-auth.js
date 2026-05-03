@@ -71,6 +71,14 @@
     return Math.max(0, Math.trunc(num));
   }
 
+  function toPointBalance(value, fallback) {
+    if (typeof value === "string") {
+      const compact = value.replace(/[^\d]/g, "");
+      if (compact) return toInt(compact, fallback);
+    }
+    return toInt(value, fallback);
+  }
+
   function formatRupiah(value) {
     return toInt(value, 0).toLocaleString("id-ID") + " Coin";
   }
@@ -84,7 +92,7 @@
   }
 
   function getCurrentPointBalance() {
-    return toInt(currentPoints, 0);
+    return toPointBalance(currentPoints, 0);
   }
 
   function buildInsufficientCoinMessage(pointUsed) {
@@ -1020,7 +1028,7 @@
   async function loadUserPoints(uid) {
     const pointsRef = db.ref(USERS_PATH + "/" + uid + "/points");
     const snap = await pointsRef.once("value");
-    return toInt(snap.val(), 0);
+    return toPointBalance(snap.val(), 0);
   }
 
   async function ensureUserSaved(user) {
@@ -1659,6 +1667,17 @@
       return;
     }
 
+    try {
+      currentPoints = await loadUserPoints(currentUser.uid);
+      storeCachedUserPoints(currentPoints);
+      updateTukarPointUI(currentPoints);
+      updateProfilePointUI(currentPoints);
+    } catch (balanceErr) {
+      console.error("[Zeratto Tukar Balance Refresh Error]", balanceErr);
+      showAlert("zrTukarMessage", "error", "Gagal memuat saldo terbaru. Coba ulangi.");
+      return;
+    }
+
     if (getCurrentPointBalance() < pointUsed) {
       showAlert("zrTukarMessage", "error", buildInsufficientCoinMessage(pointUsed));
       return;
@@ -1678,19 +1697,28 @@
 
     try {
       const pointsRef = db.ref(USERS_PATH + "/" + currentUser.uid + "/points");
+      const startingBalance = getCurrentPointBalance();
       const pointsTx = await pointsRef.transaction((current) => {
-        const currentBalance = toInt(current, 0);
+        const currentBalance = current === null || typeof current === "undefined"
+          ? startingBalance
+          : toPointBalance(current, 0);
         if (currentBalance < pointUsed) return;
         return currentBalance - pointUsed;
       });
 
       if (!pointsTx.committed) {
+        try {
+          currentPoints = await loadUserPoints(currentUser.uid);
+          storeCachedUserPoints(currentPoints);
+          updateTukarPointUI(currentPoints);
+          updateProfilePointUI(currentPoints);
+        } catch (_balanceErr) {}
         showAlert("zrTukarMessage", "error", buildInsufficientCoinMessage(pointUsed));
         await syncTukarState(currentUser);
         return;
       }
 
-      const newBalance = toInt(pointsTx.snapshot.val(), 0);
+      const newBalance = toPointBalance(pointsTx.snapshot.val(), 0);
       const reqRef = db.ref(EXCHANGE_PATH).push();
       const reqId = reqRef.key;
 
@@ -1717,7 +1745,7 @@
         updates[EXCHANGE_USER_PATH + "/" + currentUser.uid + "/" + reqId] = payload;
         await db.ref().update(updates);
       } catch (saveErr) {
-        await pointsRef.transaction((current) => toInt(current, 0) + pointUsed);
+        await pointsRef.transaction((current) => toPointBalance(current, 0) + pointUsed);
         throw saveErr;
       }
 
