@@ -83,6 +83,14 @@
     return toInt(points, 0) * EWALLET_RUPIAH_PER_COIN;
   }
 
+  function getCurrentPointBalance() {
+    return toInt(currentPoints, 0);
+  }
+
+  function buildInsufficientCoinMessage(pointUsed) {
+    return "Coin kamu belum cukup. Dibutuhkan " + formatRupiah(pointUsed) + ", saldo kamu " + formatRupiah(getCurrentPointBalance()) + ".";
+  }
+
   function readExchangeWalletRupiah(item) {
     if (!item || String(item.option || "") !== "ewallet") return 0;
     const detail = item.detail && typeof item.detail === "object" ? item.detail : {};
@@ -1651,6 +1659,11 @@
       return;
     }
 
+    if (getCurrentPointBalance() < pointUsed) {
+      showAlert("zrTukarMessage", "error", buildInsufficientCoinMessage(pointUsed));
+      return;
+    }
+
     if (!whatsapp && option !== "diamond") {
       showAlert("zrTukarMessage", "error", "Nomor WhatsApp wajib diisi.");
       return;
@@ -1672,7 +1685,7 @@
       });
 
       if (!pointsTx.committed) {
-        showAlert("zrTukarMessage", "error", "Coin tidak cukup untuk penukaran ini.");
+        showAlert("zrTukarMessage", "error", buildInsufficientCoinMessage(pointUsed));
         await syncTukarState(currentUser);
         return;
       }

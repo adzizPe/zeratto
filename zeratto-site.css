@@ -3107,6 +3107,18 @@ body.zr-site-shell::after,
   color: rgba(255, 247, 239, 0.78);
 }
 
+.zr-pulsa-nominal-card.is-unavailable,
+.zr-diamond-package-card.is-unavailable {
+  cursor: not-allowed;
+  opacity: 0.48;
+  filter: grayscale(0.25);
+}
+
+.zr-pulsa-nominal-card.is-unavailable small,
+.zr-diamond-package-card.is-unavailable small {
+  color: #8b2f23;
+}
+
 .zr-pulsa-summary-card {
   background: linear-gradient(
     180deg,

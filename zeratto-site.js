@@ -315,6 +315,14 @@
     return Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0;
   }
 
+  function getAvailableUserPoints() {
+    return readStoredUserPoints();
+  }
+
+  function getInsufficientCoinText(requiredCoin) {
+    return "Butuh " + formatCoinValue(requiredCoin) + ", coin kamu " + formatCoinValue(getAvailableUserPoints()) + ".";
+  }
+
   function readStoredGoogleUser() {
     let raw = "";
     try {
@@ -740,6 +748,9 @@
       const coinValue = Number(rawValue || 0);
       const safeCoin = Number.isFinite(coinValue) ? Math.max(0, Math.trunc(coinValue)) : 0;
       const rupiahValue = calculateEwalletRupiah(safeCoin);
+      const availableCoin = getAvailableUserPoints();
+
+      coinInput.max = String(availableCoin);
 
       if (rawValue && safeCoin !== coinValue) {
         coinInput.value = String(safeCoin);
@@ -753,6 +764,8 @@
           hint.textContent = "Minimal penukaran " + EWALLET_MIN_COIN + " coin untuk " + walletType + ".";
         } else if (safeCoin < EWALLET_MIN_COIN) {
           hint.textContent = "Minimal penukaran " + EWALLET_MIN_COIN + " coin untuk " + walletType + ".";
+        } else if (safeCoin > availableCoin) {
+          hint.textContent = "Coin kamu belum cukup. Saldo kamu " + formatCoinValue(availableCoin) + ".";
         } else {
           hint.textContent = safeCoin.toLocaleString("id-ID") + " coin akan dikonversi menjadi " + formatIdrValue(rupiahValue) + " ke akun " + walletType + ".";
         }
@@ -769,6 +782,11 @@
         syncEwalletConversion();
         updateChoiceGroup("walletType");
       }, 0);
+    });
+
+    window.addEventListener(USER_POINTS_EVENT, syncEwalletConversion);
+    window.addEventListener("storage", function (event) {
+      if (event && event.key === USER_POINTS_STORAGE_KEY) syncEwalletConversion();
     });
 
     syncWalletSelection();
@@ -907,6 +925,7 @@
       const currentPackage = getDiamondPackageData(currentGame, packageField.value);
       const currentLabel = currentPackage ? currentPackage.label : "Belum pilih paket";
       const currentCoin = currentPackage ? Math.max(0, Math.trunc(Number(currentPackage.coin) || 0)) : 0;
+      const availableCoin = getAvailableUserPoints();
       if (boardTitle) boardTitle.textContent = currentGame;
       if (pickedPackage) pickedPackage.textContent = currentLabel;
       if (summaryPackage) summaryPackage.textContent = currentLabel;
@@ -918,7 +937,7 @@
       }
       if (coinHint) {
         coinHint.textContent = currentPackage
-          ? currentLabel + " membutuhkan " + formatCoinValue(currentCoin) + "."
+          ? (availableCoin < currentCoin ? getInsufficientCoinText(currentCoin) : currentLabel + " membutuhkan " + formatCoinValue(currentCoin) + ".")
           : "Coin akan otomatis mengikuti paket yang dipilih.";
       }
     }
@@ -930,12 +949,14 @@
       const iconSvg = isRoblox ? createRobuxCardIcon() : createDiamondCardIcon();
 
       packageGrid.innerHTML = packages.map(function (item) {
+        const requiredCoin = Math.max(0, Math.trunc(Number(item.coin) || 0));
+        const unavailable = getAvailableUserPoints() < requiredCoin;
         const active = currentPackage === item.value ? " is-active" : "";
         return (
-          '<button class="zr-diamond-package-card' + active + '" type="button" data-zr-diamond-package="' + item.value + '">' +
+          '<button class="zr-diamond-package-card' + active + (unavailable ? " is-unavailable" : "") + '" type="button" data-zr-diamond-package="' + item.value + '" data-zr-required-coin="' + requiredCoin + '" aria-disabled="' + (unavailable ? "true" : "false") + '">' +
             '<span class="zr-diamond-package-icon">' + iconSvg + "</span>" +
             '<strong>' + item.label + '</strong>' +
-            '<small>' + formatCoinValue(item.coin) + '</small>' +
+            '<small>' + (unavailable ? "Coin kurang" : formatCoinValue(item.coin)) + '</small>' +
           "</button>"
         );
       }).join("");
@@ -1082,6 +1103,10 @@
     packageGrid.addEventListener("click", function (event) {
       const card = event.target && event.target.closest ? event.target.closest("[data-zr-diamond-package]") : null;
       if (!card) return;
+      if (card.classList.contains("is-unavailable")) {
+        if (coinHint) coinHint.textContent = getInsufficientCoinText(Number(card.dataset.zrRequiredCoin || 0));
+        return;
+      }
       packageField.value = String(card.dataset.zrDiamondPackage || "");
       renderPackageCards(String(gameField.value || "Mobile Legends"));
       syncDiamondSummary();
@@ -1115,6 +1140,17 @@
       }, 0);
     });
 
+    window.addEventListener(USER_POINTS_EVENT, function () {
+      renderPackageCards(String(gameField.value || "Mobile Legends"));
+      syncDiamondSummary();
+    });
+    window.addEventListener("storage", function (event) {
+      if (event && event.key === USER_POINTS_STORAGE_KEY) {
+        renderPackageCards(String(gameField.value || "Mobile Legends"));
+        syncDiamondSummary();
+      }
+    });
+
     setGame(String(gameField.value || "Mobile Legends"));
   }
 
@@ -1139,6 +1175,7 @@
       const pkg = getPulsaPackageData(operator, nominalField.value);
       const coin = pkg ? Math.max(0, Math.trunc(Number(pkg.coin) || 0)) : 0;
       const nominal = pkg ? pkg.label : "-";
+      const availableCoin = getAvailableUserPoints();
 
       operatorButtons.forEach(function (button) {
         button.classList.toggle("is-active", String(button.dataset.zrPulsaOperator || "") === operator);
@@ -1152,7 +1189,7 @@
       pointInput.min = coin ? String(coin) : "1";
       if (coinHint) {
         coinHint.textContent = pkg
-          ? operator + " " + nominal + " membutuhkan " + formatCoinValue(coin) + "."
+          ? (availableCoin < coin ? getInsufficientCoinText(coin) : operator + " " + nominal + " membutuhkan " + formatCoinValue(coin) + ".")
           : "Coin akan otomatis mengikuti nominal pulsa yang dipilih.";
       }
     }
@@ -1162,12 +1199,14 @@
       const currentNominal = String(nominalField.value || "");
 
       nominalGrid.innerHTML = packages.map(function (item) {
+        const requiredCoin = Math.max(0, Math.trunc(Number(item.coin) || 0));
+        const unavailable = getAvailableUserPoints() < requiredCoin;
         const active = currentNominal === item.value ? " is-active" : "";
         return (
-          '<button class="zr-pulsa-nominal-card' + active + '" type="button" data-zr-pulsa-nominal="' + item.value + '">' +
+          '<button class="zr-pulsa-nominal-card' + active + (unavailable ? " is-unavailable" : "") + '" type="button" data-zr-pulsa-nominal="' + item.value + '" data-zr-required-coin="' + requiredCoin + '" aria-disabled="' + (unavailable ? "true" : "false") + '">' +
             '<span class="zr-pulsa-nominal-icon">' + createNavIcon("smartphone") + "</span>" +
             '<strong>' + item.label + '</strong>' +
-            '<small>' + formatCoinValue(item.coin) + '</small>' +
+            '<small>' + (unavailable ? "Coin kurang" : formatCoinValue(item.coin)) + '</small>' +
           "</button>"
         );
       }).join("");
@@ -1206,6 +1245,10 @@
     nominalGrid.addEventListener("click", function (event) {
       const card = event.target && event.target.closest ? event.target.closest("[data-zr-pulsa-nominal]") : null;
       if (!card) return;
+      if (card.classList.contains("is-unavailable")) {
+        if (coinHint) coinHint.textContent = getInsufficientCoinText(Number(card.dataset.zrRequiredCoin || 0));
+        return;
+      }
       nominalField.value = String(card.dataset.zrPulsaNominal || "");
       renderNominalCards(String(operatorField.value || "Telkomsel"));
       syncPulsaSummary();
@@ -1215,6 +1258,17 @@
       window.setTimeout(function () {
         setOperator("Telkomsel");
       }, 0);
+    });
+
+    window.addEventListener(USER_POINTS_EVENT, function () {
+      renderNominalCards(String(operatorField.value || "Telkomsel"));
+      syncPulsaSummary();
+    });
+    window.addEventListener("storage", function (event) {
+      if (event && event.key === USER_POINTS_STORAGE_KEY) {
+        renderNominalCards(String(operatorField.value || "Telkomsel"));
+        syncPulsaSummary();
+      }
     });
 
     setOperator(String(operatorField.value || "Telkomsel"));
