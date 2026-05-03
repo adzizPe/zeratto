@@ -1032,18 +1032,55 @@
     }
   }
 
-  function csvCell(value) {
-    const safe = String(value === null || typeof value === "undefined" ? "" : value);
-    if (!/[",\r\n]/.test(safe)) return safe;
-    return "\"" + safe.replace(/"/g, "\"\"") + "\"";
+  function excelText(value) {
+    return String(value === null || typeof value === "undefined" ? "" : value);
   }
 
-  function downloadCsv(filename, rows) {
-    const body = rows.map(function (cols) {
-      return cols.map(csvCell).join(",");
-    }).join("\r\n");
-    const csv = "\uFEFF" + body;
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  function excelCell(value, tagName) {
+    const tag = tagName === "th" ? "th" : "td";
+    const text = excelText(value);
+    return "<" + tag + " style=\"mso-number-format:'\\@';\">" + escapeHtml(text) + "</" + tag + ">";
+  }
+
+  function buildExcelTableHtml(rows, options) {
+    const safeRows = Array.isArray(rows) ? rows : [];
+    const headerRows = Math.max(0, toInt(options && options.headerRows, 1));
+    const title = escapeHtml((options && options.title) || "Zeratto Export");
+    const body = safeRows.map(function (cols, rowIndex) {
+      if (!Array.isArray(cols) || !cols.length) {
+        return "<tr><td></td></tr>";
+      }
+      const tagName = rowIndex < headerRows ? "th" : "td";
+      return "<tr>" + cols.map(function (value) {
+        return excelCell(value, tagName);
+      }).join("") + "</tr>";
+    }).join("");
+
+    return [
+      "<!doctype html>",
+      "<html>",
+      "<head>",
+      "<meta charset=\"utf-8\">",
+      "<title>", title, "</title>",
+      "<style>",
+      "table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px;}",
+      "th{background:#d9ead3;font-weight:700;}",
+      "td,th{border:1px solid #999;padding:6px 8px;vertical-align:top;white-space:nowrap;}",
+      ".summary th{background:#fce5cd;}",
+      "</style>",
+      "</head>",
+      "<body>",
+      "<table>",
+      body,
+      "</table>",
+      "</body>",
+      "</html>"
+    ].join("");
+  }
+
+  function downloadExcel(filename, rows, options) {
+    const html = "\uFEFF" + buildExcelTableHtml(rows, options || {});
+    const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -1137,13 +1174,15 @@
     }
     const table = [["Kode Redeem", "Status In"]];
     rows.forEach(function (row) {
-      table.push([row.code, row.statusIn ? "☑" : ""]);
+      table.push([row.code, row.statusIn ? "IN" : ""]);
     });
     const tag = state.recapDate || "semua-tanggal";
-    downloadCsv("zeratto-status-in-" + tag + ".csv", table);
+    downloadExcel("zeratto-status-in-" + tag + ".xls", table, {
+      title: "Zeratto Status In",
+      headerRows: 1
+    });
     showToast("File Status In berhasil dibuat.", "success");
   }
-
   function exportStatusInOutCsv() {
     const rows = buildCodeRecapRows(state.recapDate);
     if (!rows.length) {
@@ -1152,13 +1191,15 @@
     }
     const table = [["Kode Redeem", "Status In", "Status Out"]];
     rows.forEach(function (row) {
-      table.push([row.code, row.statusIn ? "☑" : "", row.statusOut ? "✅" : ""]);
+      table.push([row.code, row.statusIn ? "IN" : "", row.statusOut ? "OUT" : ""]);
     });
     const tag = state.recapDate || "semua-tanggal";
-    downloadCsv("zeratto-status-in-out-" + tag + ".csv", table);
+    downloadExcel("zeratto-status-in-out-" + tag + ".xls", table, {
+      title: "Zeratto Status In Out",
+      headerRows: 1
+    });
     showToast("File rekap In/Out berhasil dibuat.", "success");
   }
-
   async function exportWeeklyCsv() {
     const anchorDate = ymdToLocalDate(state.recapDate) || new Date();
     anchorDate.setHours(0, 0, 0, 0);
@@ -1199,7 +1240,7 @@
     const totalInWeek = inRangeRows.filter(function (row) { return row.statusIn; }).length;
     const totalOutWeek = inRangeRows.filter(function (row) { return row.statusOut; }).length;
 
-    const csvRows = [
+    const excelRows = [
       ["Laporan Mingguan Kode Redeem Zeratto"],
       ["Periode", formatDateOnly(start) + " - " + formatDateOnly(end)],
       ["Dibuat", formatDateTime(Date.now())],
@@ -1211,16 +1252,19 @@
     ]);
 
     inRangeRows.forEach(function (row) {
-      csvRows.push([
+      excelRows.push([
         row.code,
-        row.statusIn ? "☑" : "",
-        row.statusOut ? "✅" : "",
+        row.statusIn ? "IN" : "",
+        row.statusOut ? "OUT" : "",
         row.issuedAt ? formatDateOnly(row.issuedAt) : "-"
       ]);
     });
 
     const periodTag = toYmd(start) + "_sampai_" + toYmd(end);
-    downloadCsv("zeratto-rekap-mingguan-" + periodTag + ".csv", csvRows);
+    downloadExcel("zeratto-rekap-mingguan-" + periodTag + ".xls", excelRows, {
+      title: "Zeratto Rekap Mingguan",
+      headerRows: 1
+    });
 
     saveWeeklyReportLog({
       createdAt: Date.now(),
