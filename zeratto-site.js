@@ -1340,8 +1340,7 @@
     }
 
     function updateSectionVisibility() {
-      const hasActiveSpin = Math.max(0, Math.trunc(Number(gachaState.availableSpins) || 0)) > 0;
-      section.hidden = !(isUserLoggedIn() && (spinning || hasActiveSpin));
+      section.hidden = false;
     }
 
     function buildRedeemFallbackState(detail) {

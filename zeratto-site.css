@@ -2366,14 +2366,14 @@ body.zr-site-shell::after,
 
 /* Spin Wheel Styles */
 .zr-gacha-machine-wheel {
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-  gap: 30px;
+  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr);
+  gap: 22px;
 }
 
 .zr-spin-wheel-container {
   position: relative;
   width: 100%;
-  max-width: 320px;
+  max-width: 280px;
   aspect-ratio: 1;
   margin: 0 auto;
 }
@@ -2385,9 +2385,9 @@ body.zr-site-shell::after,
   border-radius: 50%;
   overflow: hidden;
   box-shadow:
-    0 0 0 8px rgba(48, 30, 20, 0.3),
-    0 0 0 12px #fff7ef,
-    0 0 40px rgba(255, 165, 100, 0.25);
+    0 0 0 6px rgba(48, 30, 20, 0.3),
+    0 0 0 10px #fff7ef,
+    0 0 32px rgba(255, 165, 100, 0.22);
   background: radial-gradient(
     circle at center,
     #2f1d14 0 20%,
@@ -2456,16 +2456,16 @@ body.zr-site-shell::after,
 
 .zr-wheel-number span {
   position: absolute;
-  top: 10px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%) rotate(calc(-1 * var(--rotate)));
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 58px;
-  padding: 4px 6px;
-  font-size: 1.05rem;
+  min-width: 50px;
+  padding: 3px 5px;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #fff;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -2488,8 +2488,8 @@ body.zr-site-shell::after,
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 70px;
-  height: 70px;
+  width: 62px;
+  height: 62px;
   background: linear-gradient(135deg, #ffc857 0%, #ff9153 100%);
   border-radius: 50%;
   border: 4px solid #fff;
@@ -2506,7 +2506,7 @@ body.zr-site-shell::after,
     0 0 20px rgba(255, 165, 100, 0.5),
     inset 0 -4px 0 rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
 }
 
 .zr-spin-btn:hover:not(:disabled) {
@@ -4049,6 +4049,14 @@ body.zr-site-shell::after,
     grid-template-columns: 1fr;
   }
 
+  .zr-gacha-machine-wheel {
+    gap: 16px;
+  }
+
+  .zr-spin-wheel-container {
+    max-width: min(245px, 74vw);
+  }
+
   .zr-gacha-grid--compact {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
@@ -4270,7 +4278,28 @@ body.zr-site-shell::after,
   }
 
   .zr-gacha-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .zr-spin-wheel-container {
+    max-width: min(220px, 72vw);
+  }
+
+  .zr-wheel-number span {
+    min-width: 42px;
+    font-size: 0.78rem;
+  }
+
+  .zr-wheel-number span::after {
+    font-size: 0.5rem;
+  }
+
+  .zr-spin-btn {
+    width: 54px;
+    height: 54px;
+    border-width: 3px;
+    font-size: 0.68rem;
   }
 
   .zr-redeem-box .zr-redeem,
